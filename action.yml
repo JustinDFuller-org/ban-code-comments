@@ -1,0 +1,34 @@
+name: ban-code-comments
+author: Justin Fuller
+description: Run ban-code-comments against a checked-out repository
+inputs:
+  paths:
+    description: Newline-separated files or directories to scan
+    required: false
+    default: .
+  languages:
+    description: Comma-separated or newline-separated languages to scan
+    required: false
+  categories:
+    description: Comma-separated comment categories to report
+    required: false
+  include:
+    description: Newline-separated file globs to include
+    required: false
+  exclude:
+    description: Newline-separated file globs to exclude
+    required: false
+  format:
+    description: Output format, json or text
+    required: false
+    default: json
+  debug:
+    description: Write skipped-file diagnostics to stderr
+    required: false
+    default: 'false'
+runs:
+  using: node24
+  main: dist/index.js
+branding:
+  color: red
+  icon: shield

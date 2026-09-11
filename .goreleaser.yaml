@@ -1,5 +1,7 @@
 version: 2
 
+dist: .goreleaser-dist
+
 project_name: ban-code-comments
 
 before:
@@ -30,6 +32,7 @@ archives:
   - id: default
     ids:
       - ban-code-comments
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
     formats:
       - tar.gz
     format_overrides:
