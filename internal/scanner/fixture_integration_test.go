@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/JustinDFuller/ban-code-comments/internal/languages"
@@ -64,11 +65,43 @@ func TestFixtureFilesCoverEverySupportedLanguage(t *testing.T) {
 				if wantFinding && len(findings) != 1 {
 					t.Fatalf("%s fixture findings = %#v, want one", kind, findings)
 				}
+				if wantFinding {
+					finding := findings[0]
+					if finding.Path != filepath.ToSlash(path) || finding.Language != model.Language(fixture.name) || finding.Category != model.CategoryOrdinary || !strings.Contains(finding.Text, "finding") {
+						t.Fatalf("finding = %#v, want fixture path/language/ordinary category/text", finding)
+					}
+					if finding.Range.Start.Line < 1 || finding.Range.Start.Column < 1 || finding.Range.End.Line < finding.Range.Start.Line {
+						t.Fatalf("finding range = %#v, want positive ordered range", finding.Range)
+					}
+				}
 				if !wantFinding && len(findings) != 0 {
 					t.Fatalf("%s fixture findings = %#v, want none", kind, findings)
 				}
 			}
 		})
+	}
+}
+
+func TestFixtureRegistryCoversEverySupportedExtension(t *testing.T) {
+	cases := map[string]model.Language{
+		"fixture.go": "go",
+		"fixture.js": "javascript", "fixture.jsx": "javascript", "fixture.mjs": "javascript", "fixture.cjs": "javascript",
+		"fixture.ts": "typescript", "fixture.tsx": "typescript", "fixture.mts": "typescript", "fixture.cts": "typescript",
+		"fixture.py": "python", "fixture.pyw": "python", "fixture.rs": "rust", "fixture.java": "java",
+		"fixture.c": "c", "fixture.h": "c", "fixture.cc": "cpp", "fixture.cpp": "cpp", "fixture.cxx": "cpp", "fixture.hh": "cpp", "fixture.hpp": "cpp", "fixture.hxx": "cpp",
+		"fixture.cs": "csharp", "fixture.kt": "kotlin", "fixture.kts": "kotlin", "fixture.swift": "swift",
+		"fixture.rb": "ruby", "fixture.rake": "ruby", "fixture.php": "php",
+		"fixture.sh": "shell", "fixture.bash": "shell", "fixture.zsh": "shell", "fixture.fish": "shell", "fixture.ksh": "shell", "fixture.csh": "shell",
+		"fixture.sql": "sql", "fixture.html": "html", "fixture.htm": "html", "fixture.xhtml": "html", "fixture.xml": "xml", "fixture.svg": "xml",
+		"fixture.css": "css", "fixture.scss": "scss", "fixture.sass": "scss", "fixture.yaml": "yaml", "fixture.yml": "yaml", "fixture.toml": "toml",
+		"fixture.json": "json", "fixture.jsonc": "jsonc", "fixture.hcl": "hcl", "fixture.tf": "terraform", "fixture.tfvars": "terraform",
+		"fixture.mk": "makefile", "fixture.mak": "makefile", "fixture.ini": "ini", "fixture.cfg": "ini", "fixture.conf": "ini",
+		"Dockerfile": "dockerfile", "Makefile": "makefile",
+	}
+	for path, want := range cases {
+		if got, ok := languages.Lookup(path); !ok || got != want {
+			t.Errorf("Lookup(%q) = %q, %v; want %q, true", path, got, ok, want)
+		}
 	}
 }
 
