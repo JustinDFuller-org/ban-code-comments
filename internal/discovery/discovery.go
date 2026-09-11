@@ -25,6 +25,7 @@ type Candidate struct {
 	Path     string
 	RelPath  string
 	Language model.Language
+	gitRoot  string
 }
 
 type Diagnostic struct {
@@ -53,23 +54,51 @@ func Discover(config Config) (Result, error) {
 	if err != nil {
 		return Result{}, err
 	}
+	if resolvedDirectory, resolveErr := filepath.EvalSymlinks(workingDirectory); resolveErr == nil {
+		workingDirectory = resolvedDirectory
+	}
 	gitRoot := findGitRoot(workingDirectory)
 	var candidates []Candidate
+	seenCandidates := make(map[string]bool)
+	rootCache := make(map[string]string)
 	var diagnostics []Diagnostic
 	skipped := 0
+	addCandidate := func(candidate *Candidate) {
+		if seenCandidates[candidate.Path] {
+			return
+		}
+		seenCandidates[candidate.Path] = true
+		candidates = append(candidates, *candidate)
+	}
+	rootForCandidate := func(path, fallback string) string {
+		directory := filepath.Dir(path)
+		if root, ok := rootCache[directory]; ok {
+			return root
+		}
+		root := findGitRoot(directory)
+		if root == "" {
+			root = fallback
+		}
+		rootCache[directory] = root
+		return root
+	}
 	for _, inputPath := range config.Paths {
 		absolutePath, err := filepath.Abs(inputPath)
 		if err != nil {
 			return Result{}, err
 		}
-		info, err := os.Stat(absolutePath)
+		resolvedInputPath := absolutePath
+		if resolvedPath, resolveErr := filepath.EvalSymlinks(absolutePath); resolveErr == nil {
+			resolvedInputPath = resolvedPath
+		}
+		info, err := os.Stat(resolvedInputPath)
 		if err != nil {
 			return Result{}, fmt.Errorf("stat %s: %w", inputPath, err)
 		}
 		if info.Mode().IsRegular() {
-			candidate, reason := candidateFor(absolutePath, workingDirectory, gitRoot, config)
+			candidate, reason := candidateFor(resolvedInputPath, workingDirectory, rootForCandidate(resolvedInputPath, inputGitRoot(resolvedInputPath, false, gitRoot)), config)
 			if candidate != nil {
-				candidates = append(candidates, *candidate)
+				addCandidate(candidate)
 			} else {
 				skipped++
 				if config.Debug {
@@ -78,12 +107,17 @@ func Discover(config Config) (Result, error) {
 			}
 			continue
 		}
-		err = filepath.WalkDir(absolutePath, func(path string, entry os.DirEntry, walkErr error) error {
+		walkPath := absolutePath
+		if resolvedPath, resolveErr := filepath.EvalSymlinks(absolutePath); resolveErr == nil {
+			walkPath = resolvedPath
+		}
+		inputRoot := inputGitRoot(walkPath, true, gitRoot)
+		err = filepath.WalkDir(walkPath, func(path string, entry os.DirEntry, walkErr error) error {
 			if walkErr != nil {
 				return walkErr
 			}
 			if entry.IsDir() {
-				if path != absolutePath && fixedDirectories[entry.Name()] {
+				if fixedDirectories[entry.Name()] {
 					if config.Debug {
 						diagnostics = append(diagnostics, Diagnostic{Path: displayPath(path, workingDirectory), Reason: "excluded directory"})
 					}
@@ -95,9 +129,9 @@ func Discover(config Config) (Result, error) {
 			if !entry.Type().IsRegular() {
 				return nil
 			}
-			candidate, reason := candidateFor(path, workingDirectory, gitRoot, config)
+			candidate, reason := candidateFor(path, workingDirectory, rootForCandidate(path, inputRoot), config)
 			if candidate != nil {
-				candidates = append(candidates, *candidate)
+				addCandidate(candidate)
 			} else {
 				skipped++
 				if config.Debug {
@@ -110,9 +144,21 @@ func Discover(config Config) (Result, error) {
 			return Result{}, fmt.Errorf("walk %s: %w", inputPath, err)
 		}
 	}
-	ignored, err := ignoredPaths(candidates, gitRoot)
-	if err != nil {
-		return Result{}, err
+	ignored := make(map[string]bool)
+	byRoot := make(map[string][]Candidate)
+	for _, candidate := range candidates {
+		if candidate.gitRoot != "" {
+			byRoot[candidate.gitRoot] = append(byRoot[candidate.gitRoot], candidate)
+		}
+	}
+	for root, rootCandidates := range byRoot {
+		rootIgnored, ignoreErr := ignoredPaths(rootCandidates, root)
+		if ignoreErr != nil {
+			return Result{}, ignoreErr
+		}
+		for path := range rootIgnored {
+			ignored[path] = true
+		}
 	}
 	filtered := candidates[:0]
 	for _, candidate := range candidates {
@@ -129,6 +175,9 @@ func Discover(config Config) (Result, error) {
 }
 
 func candidateFor(path, workingDirectory, gitRoot string, config Config) (*Candidate, string) {
+	if resolvedPath, err := filepath.EvalSymlinks(path); err == nil {
+		path = resolvedPath
+	}
 	language, ok := languages.Lookup(path)
 	if !ok {
 		return nil, "unsupported file type"
@@ -143,7 +192,18 @@ func candidateFor(path, workingDirectory, gitRoot string, config Config) (*Candi
 	if len(config.Includes) > 0 && !matchesAny(config.Includes, relativePath) {
 		return nil, "include glob"
 	}
-	return &Candidate{Path: path, RelPath: relativePath, Language: language}, ""
+	return &Candidate{Path: path, RelPath: relativePath, Language: language, gitRoot: gitRoot}, ""
+}
+
+func inputGitRoot(path string, directory bool, fallback string) string {
+	searchPath := path
+	if !directory {
+		searchPath = filepath.Dir(path)
+	}
+	if root := findGitRoot(searchPath); root != "" {
+		return root
+	}
+	return fallback
 }
 
 func findGitRoot(path string) string {

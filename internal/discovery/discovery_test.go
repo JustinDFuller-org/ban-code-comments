@@ -75,3 +75,112 @@ func TestDiscoverHonorsGitignoreAndGlobPrecedence(t *testing.T) {
 		t.Fatalf("debug diagnostics = %q", debugOutput)
 	}
 }
+
+func TestDiscoverDeduplicatesOverlappingPaths(t *testing.T) {
+	t.Chdir(t.TempDir())
+	if err := writeFile("main.go", "package main\n// finding\n"); err != nil {
+		t.Fatal(err)
+	}
+	discovered, err := Discover(Config{Paths: []string{".", "main.go"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(discovered.Candidates) != 1 {
+		t.Fatalf("candidates = %#v, want one unique candidate", discovered.Candidates)
+	}
+}
+
+func TestDiscoverUsesSuppliedRepositoryRoot(t *testing.T) {
+	repository := t.TempDir()
+	outside := t.TempDir()
+	if err := mkdirAll(filepath.Join(repository, "src")); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeFile(filepath.Join(repository, ".gitignore"), "src/ignored.go\n"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeFile(filepath.Join(repository, "src", "ignored.go"), "package main\n// ignored\n"); err != nil {
+		t.Fatal(err)
+	}
+	if output, err := exec.Command("git", "-C", repository, "init", "-q").CombinedOutput(); err != nil {
+		t.Fatalf("git init: %v: %s", err, output)
+	}
+	t.Chdir(outside)
+	discovered, err := Discover(Config{Paths: []string{repository}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(discovered.Candidates) != 0 {
+		t.Fatalf("discovered = %#v, want ignored file skipped", discovered)
+	}
+}
+
+func TestDiscoverExcludesExplicitFixedDirectoryRoot(t *testing.T) {
+	t.Chdir(t.TempDir())
+	if err := mkdirAll("vendor"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeFile(filepath.Join("vendor", "dependency.go"), "package dependency\n"); err != nil {
+		t.Fatal(err)
+	}
+	discovered, err := Discover(Config{Paths: []string{"vendor"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(discovered.Candidates) != 0 || discovered.Skipped != 1 {
+		t.Fatalf("discovered = %#v, want vendor root skipped", discovered)
+	}
+}
+
+func TestDiscoverFollowsExplicitDirectorySymlink(t *testing.T) {
+	t.Chdir(t.TempDir())
+	target := filepath.Join(t.TempDir(), "source")
+	if err := mkdirAll(target); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeFile(filepath.Join(target, "main.go"), "package main\n"); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(target, "linked"); err != nil {
+		t.Fatal(err)
+	}
+	discovered, err := Discover(Config{Paths: []string{"linked"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(discovered.Candidates) != 1 {
+		t.Fatalf("discovered = %#v, want symlink target file", discovered)
+	}
+}
+
+func TestDiscoverUsesNestedRepositoryIgnoreRules(t *testing.T) {
+	repository := t.TempDir()
+	nested := filepath.Join(repository, "nested")
+	if err := mkdirAll(nested); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeFile(filepath.Join(repository, "outer.go"), "package main\n"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeFile(filepath.Join(nested, ".gitignore"), "ignored.go\n"); err != nil {
+		t.Fatal(err)
+	}
+	if err := writeFile(filepath.Join(nested, "ignored.go"), "package nested\n"); err != nil {
+		t.Fatal(err)
+	}
+	if output, err := exec.Command("git", "-C", repository, "init", "-q").CombinedOutput(); err != nil {
+		t.Fatalf("outer git init: %v: %s", err, output)
+	}
+	if output, err := exec.Command("git", "-C", nested, "init", "-q").CombinedOutput(); err != nil {
+		t.Fatalf("nested git init: %v: %s", err, output)
+	}
+	discovered, err := Discover(Config{Paths: []string{repository}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, candidate := range discovered.Candidates {
+		if filepath.Base(candidate.Path) == "ignored.go" {
+			t.Fatalf("nested ignored candidate = %#v", candidate)
+		}
+	}
+}
