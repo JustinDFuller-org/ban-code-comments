@@ -36,7 +36,7 @@ The scanner ignores comment-shaped text inside strings, raw strings, templates, 
 
 ## Automation
 
-In GitHub Actions, install the released binary and run `ban-code-comments .` as a step. Preserve its exit status so findings fail the job. Claude hooks can invoke the same command against the changed repository or file paths.
+In GitHub Actions, install the released binary and run `ban-code-comments .` as a step. Preserve its exit status so findings fail the job. This repository dogfoods the current source tree in CI with `go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' .`; the fixture exclusion keeps intentional scanner inputs separate from production code. Claude hooks can invoke the same command against the changed repository or file paths.
 
 ## Development
 
