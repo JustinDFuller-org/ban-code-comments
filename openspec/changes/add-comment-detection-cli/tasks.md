@@ -17,8 +17,8 @@
 
 ## 4. Release and documentation
 
-- [ ] 4.1 Add GoReleaser configuration and a least-privilege, tag-triggered GitHub Actions release workflow for the required macOS, Linux, and Windows targets with checksums; verify `goreleaser check` and a local snapshot build succeed.
-- [ ] 4.2 Update the README with installation, JSON/text output, flag reference, exit-code contract, language/category coverage, and GitHub Actions/Claude hook invocation examples; verify documented commands match CLI integration tests.
+- [x] 4.1 Add GoReleaser configuration and a least-privilege, tag-triggered GitHub Actions release workflow for the required macOS, Linux, and Windows targets with checksums; verify `goreleaser check` and a local snapshot build succeed.
+- [x] 4.2 Update the README with installation, JSON/text output, flag reference, exit-code contract, language/category coverage, and GitHub Actions/Claude hook invocation examples; verify documented commands match CLI integration tests.
 
 ## 5. Final verification
 
