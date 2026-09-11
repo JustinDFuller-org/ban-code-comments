@@ -1,13 +1,13 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
 	"github.com/JustinDFuller/ban-code-comments/internal/cli"
 	"github.com/JustinDFuller/ban-code-comments/internal/discovery"
 	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller/ban-code-comments/internal/report"
 	"github.com/JustinDFuller/ban-code-comments/internal/scanner"
 )
 
@@ -36,15 +36,13 @@ func main() {
 	}
 	result := model.Result{Findings: findings, Summary: model.Summary{FilesScanned: len(discovered.Candidates), FilesSkipped: discovered.Skipped, Findings: len(findings)}}
 	if options.Format == cli.FormatText {
-		if len(result.Findings) == 0 {
-			os.Exit(0)
-		}
-		for _, finding := range result.Findings {
-			fmt.Printf("%s:%d:%d: %s\n", finding.Path, finding.Range.Start.Line, finding.Range.Start.Column, finding.Text)
+		if err := report.Text(os.Stdout, result.Findings); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(model.ExitCode(nil, err))
 		}
 		os.Exit(model.ExitCode(findings, nil))
 	}
-	if err := json.NewEncoder(os.Stdout).Encode(result); err != nil {
+	if err := report.JSON(os.Stdout, result); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(model.ExitCode(nil, err))
 	}

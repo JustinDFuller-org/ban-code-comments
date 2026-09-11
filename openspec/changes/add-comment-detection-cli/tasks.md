@@ -12,8 +12,8 @@
 
 ## 3. Reporting and command behavior
 
-- [ ] 3.1 Implement the stable JSON result object with findings and summary plus `--format text`; verify golden tests cover empty, finding, and text-mode results.
-- [ ] 3.2 Complete end-to-end CLI coverage for default current-directory scanning, supplied paths, language/category filters, invalid options, unreadable paths, and debug mode; verify all integration tests pass through the built binary.
+- [x] 3.1 Implement the stable JSON result object with findings and summary plus `--format text`; verify golden tests cover empty, finding, and text-mode results.
+- [x] 3.2 Complete end-to-end CLI coverage for default current-directory scanning, supplied paths, language/category filters, invalid options, unreadable paths, and debug mode; verify all integration tests pass through the built binary.
 
 ## 4. Release and documentation
 
