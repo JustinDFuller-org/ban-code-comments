@@ -9,6 +9,7 @@
 - [x] 2.1 Implement reusable pure-Go lexical state machines for C-style, hash-style, shell, Python, HTML/XML, SQL, CSS, and format-specific comment syntaxes; verify fixtures reject delimiters in strings, raw strings, templates, escaped text, heredocs, and triple-quoted literals.
 - [x] 2.2 Connect every supported language to the appropriate scanner family and source-range reporting; verify language fixtures detect ordinary comments with correct path, line, column, and text.
 - [x] 2.3 Implement ordinary, documentation, header, and directive classification with practical default categories; verify fixtures cover default suppression and explicit inclusion of headers and directives.
+- [x] 2.4 Add real fixture files for every supported language with finding, clean, and false-positive cases; verify the integration suite resolves each fixture through the language registry and checks expected findings.
 
 ## 3. Reporting and command behavior
 
