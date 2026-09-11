@@ -1,8 +1,8 @@
 ## 1. CLI foundation and discovery
 
-- [ ] 1.1 Create the Go module, `ban-code-comments` entry point, option parser, typed scan model, and status mapping; verify `go test ./...` passes and clean/finding/error command fixtures return 0/1/2.
-- [ ] 1.2 Implement the supported-language registry for extensions and special filenames, language filters, and category selection; verify table-driven registry tests cover every documented language and invalid selections.
-- [ ] 1.3 Implement recursive repository-aware discovery with `.gitignore`, fixed VCS/dependency/build exclusions, include/exclude globs, unsupported-file skipping, and stderr debug diagnostics; verify temporary-repository integration tests cover precedence and output-stream separation.
+- [x] 1.1 Create the Go module, `ban-code-comments` entry point, option parser, typed scan model, and status mapping; verify `go test ./...` passes and clean/finding/error command fixtures return 0/1/2.
+- [x] 1.2 Implement the supported-language registry for extensions and special filenames, language filters, and category selection; verify table-driven registry tests cover every documented language and invalid selections.
+- [x] 1.3 Implement recursive repository-aware discovery with `.gitignore`, fixed VCS/dependency/build exclusions, include/exclude globs, unsupported-file skipping, and stderr debug diagnostics; verify temporary-repository integration tests cover precedence and output-stream separation.
 
 ## 2. Comment detection and classification
 
