@@ -22,4 +22,4 @@
 
 ## 5. Final verification
 
-- [ ] 5.1 Run the full Go test suite, static checks, formatting validation, OpenSpec strict validation, and GoReleaser validation; verify the tracked diff contains only the approved CLI, release, documentation, and OpenSpec artifacts.
+- [x] 5.1 Run the full Go test suite, static checks, formatting validation, OpenSpec strict validation, and GoReleaser validation; verify the tracked diff contains only the approved CLI, release, documentation, and OpenSpec artifacts.
