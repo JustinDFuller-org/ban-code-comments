@@ -6,9 +6,9 @@
 
 ## 2. Comment detection and classification
 
-- [ ] 2.1 Implement reusable pure-Go lexical state machines for C-style, hash-style, shell, Python, HTML/XML, SQL, CSS, and format-specific comment syntaxes; verify fixtures reject delimiters in strings, raw strings, templates, escaped text, heredocs, and triple-quoted literals.
-- [ ] 2.2 Connect every supported language to the appropriate scanner family and source-range reporting; verify language fixtures detect ordinary comments with correct path, line, column, and text.
-- [ ] 2.3 Implement ordinary, documentation, header, and directive classification with practical default categories; verify fixtures cover default suppression and explicit inclusion of headers and directives.
+- [x] 2.1 Implement reusable pure-Go lexical state machines for C-style, hash-style, shell, Python, HTML/XML, SQL, CSS, and format-specific comment syntaxes; verify fixtures reject delimiters in strings, raw strings, templates, escaped text, heredocs, and triple-quoted literals.
+- [x] 2.2 Connect every supported language to the appropriate scanner family and source-range reporting; verify language fixtures detect ordinary comments with correct path, line, column, and text.
+- [x] 2.3 Implement ordinary, documentation, header, and directive classification with practical default categories; verify fixtures cover default suppression and explicit inclusion of headers and directives.
 
 ## 3. Reporting and command behavior
 
