@@ -17,11 +17,11 @@
 
 ## 4. Validate the released installation path
 
-- [ ] 4.1 Update the real Codex smoke harness to install the plugin through the normal marketplace/plugin launcher with no `BAN_CODE_COMMENTS_EXECUTABLE` or local binary override, using `CODEX_SMOKE_REUSE_AUTH=1` only when required; verify it reports released artifact/version evidence.
-- [ ] 4.2 Run local released-path Codex QA for hard blocking before file mutation, Markdown and literal allowance, warn-mode model-visible guidance, clean edits, and unsupported-tool non-enforcement; verify the old missing-hook failure does not occur.
-- [ ] 4.3 Record release tag, CLI version, installed plugin versions, exact smoke command, cache/concurrency result, and any unrun hosted or cross-platform validation; verify the final report gives an explicit PASS/FAIL result.
+- [x] 4.1 Update the real Codex smoke harness to install the plugin through the normal marketplace/plugin launcher with no `BAN_CODE_COMMENTS_EXECUTABLE` or local binary override, using `CODEX_SMOKE_REUSE_AUTH=1` only when required; verify it reports released artifact/version evidence.
+- [x] 4.2 Run local released-path Codex QA for hard blocking before file mutation, Markdown and literal allowance, warn-mode model-visible guidance, clean edits, and unsupported-tool non-enforcement; verify the old missing-hook failure does not occur.
+- [x] 4.3 Record release tag, CLI version, installed plugin versions, exact smoke command, cache/concurrency result, and any unrun hosted or cross-platform validation; verify the final report gives an explicit PASS/FAIL result.
 
 ## 5. Release and handoff
 
-- [ ] 5.1 Update release/version coupling and publish the new plugin/CLI artifact required by the launcher, then verify the target-machine archive checksum and executable are the new release rather than v1.0.0.
-- [ ] 5.2 Run the complete local validation suite against the released artifact and verify the worktree, generated OpenSpec status, and release evidence are ready for review.
+- [x] 5.1 Update release/version coupling and publish the new plugin/CLI artifact required by the launcher, then verify the target-machine archive checksum and executable are the new release rather than v1.0.0.
+- [x] 5.2 Run the complete local validation suite against the released artifact and verify the worktree, generated OpenSpec status, and release evidence are ready for review.
