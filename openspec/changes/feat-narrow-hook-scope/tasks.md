@@ -1,19 +1,19 @@
 ## 1. Narrow the hook boundary
 
-- [ ] 1.1 Change both plugin manifests to register only anchored `PreToolUse` hooks for `apply_patch`, `edit`, `write`, `write_file`, and `file_write`, and verify plugin validation accepts the manifests and excludes `PostToolUse`.
-- [ ] 1.2 Remove Bash/shell/exec post-audit dispatch, workspace snapshot comparison, persisted hook state, and obsolete state-directory plumbing, and verify the Go package builds and unsupported events return no policy response.
-- [ ] 1.3 Preserve the traditional-tool allowlist and scanner-based reconstruction behavior, and verify direct hook tests cover all five tool names plus malformed and unsupported inputs.
+- [x] 1.1 Change both plugin manifests to register only anchored `PreToolUse` hooks for `apply_patch`, `edit`, `write`, `write_file`, and `file_write`, and verify plugin validation accepts the manifests and excludes `PostToolUse`.
+- [x] 1.2 Remove Bash/shell/exec post-audit dispatch, workspace snapshot comparison, persisted hook state, and obsolete state-directory plumbing, and verify the Go package builds and unsupported events return no policy response.
+- [x] 1.3 Preserve the traditional-tool allowlist and scanner-based reconstruction behavior, and verify direct hook tests cover all five tool names plus malformed and unsupported inputs.
 
 ## 2. Align Codex responses and documentation
 
-- [ ] 2.1 Add warn guidance to Codex's nested `hookSpecificOutput.additionalContext` while retaining the top-level compatibility warning field, and verify raw protocol tests assert both fields and hard mode still blocks before mutation.
-- [ ] 2.2 Update the main Codex hook specification, README, bundled guidance skill, and CI guidance to describe traditional file-write enforcement and CI-only coverage for Bash, MCP, and other unsupported write paths; verify documentation references are consistent.
+- [x] 2.1 Add warn guidance to Codex's nested `hookSpecificOutput.additionalContext` while retaining the top-level compatibility warning field, and verify raw protocol tests assert both fields and hard mode still blocks before mutation.
+- [x] 2.2 Update the main Codex hook specification, README, bundled guidance skill, and CI guidance to describe traditional file-write enforcement and CI-only coverage for Bash, MCP, and other unsupported write paths; verify documentation references are consistent.
 
 ## 3. Update automated coverage
 
-- [ ] 3.1 Replace Bash/PostToolUse unit and fixture integration scenarios with hard blocking, warn allowance, Markdown/string-literal allowance, legacy findings, clean edits, rename/delete behavior, and unsupported-tool no-op cases; verify `go test ./...` passes.
-- [ ] 3.2 Update plugin structural validation and any package/launcher assertions for the PreToolUse-only configuration, and verify `npm test` plus plugin validation pass without requiring a local executable override.
-- [ ] 3.3 Keep or adapt concurrent plugin-cache initialization coverage and verify parallel startup produces one valid checksum-verified released CLI cache entry.
+- [x] 3.1 Replace Bash/PostToolUse unit and fixture integration scenarios with hard blocking, warn allowance, Markdown/string-literal allowance, legacy findings, clean edits, rename/delete behavior, and unsupported-tool no-op cases; verify `go test ./...` passes.
+- [x] 3.2 Update plugin structural validation and any package/launcher assertions for the PreToolUse-only configuration, and verify `npm test` plus plugin validation pass without requiring a local executable override.
+- [x] 3.3 Keep or adapt concurrent plugin-cache initialization coverage and verify parallel startup produces one valid checksum-verified released CLI cache entry.
 
 ## 4. Validate the released installation path
 

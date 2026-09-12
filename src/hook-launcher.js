@@ -12,10 +12,7 @@ function launchFailure(mode, error) {
 async function runHook(mode, options = {}) {
   const executable = await downloadPluginCLI(options);
   await access(executable);
-  const args = ["hook", "--mode", mode];
-  const stateDirectory = options.stateDirectory || process.env.BAN_CODE_COMMENTS_HOOK_STATE_DIR;
-  if (stateDirectory) args.push("--state-dir", stateDirectory);
-  return runCLI(executable, args, options.cwd || process.cwd());
+  return runCLI(executable, ["hook", "--mode", mode], options.cwd || process.cwd());
 }
 
 async function main(modeOverride) {

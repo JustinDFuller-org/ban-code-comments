@@ -22,12 +22,14 @@ for (const entry of marketplace.plugins) {
   const manifest = JSON.parse(await fs.readFile(path.join(pluginRoot, ".codex-plugin", "plugin.json"), "utf8"));
   if (manifest.name !== entry.name || manifest.version !== CLI_VERSION) throw new Error(`${entry.name} manifest/version is invalid`);
   const hooks = JSON.parse(await fs.readFile(path.join(pluginRoot, "hooks", "hooks.json"), "utf8"));
-  for (const event of ["PreToolUse", "PostToolUse"]) {
+  const matcher = "^(apply_patch|edit|write|write_file|file_write)$";
+  for (const event of ["PreToolUse"]) {
     const definitions = hooks.hooks?.[event];
-    if (!Array.isArray(definitions) || definitions.length !== 1 || definitions[0].matcher !== ".*") throw new Error(`${entry.name} ${event} matcher is invalid`);
+    if (!Array.isArray(definitions) || definitions.length !== 1 || definitions[0].matcher !== matcher) throw new Error(`${entry.name} ${event} matcher is invalid`);
     const command = definitions[0].hooks?.[0]?.command;
     if (definitions[0].hooks?.[0]?.type !== "command" || command !== `node \${PLUGIN_ROOT}/bin/launcher.js --mode ${mode}`) throw new Error(`${entry.name} ${event} command is invalid`);
   }
+  if (hooks.hooks?.PostToolUse) throw new Error(`${entry.name} PostToolUse must be absent`);
   const bundle = await fs.stat(path.join(pluginRoot, "bin", "launcher.js"));
   if (!bundle.isFile() || bundle.size < 1000) throw new Error(`${entry.name} launcher bundle is missing or empty`);
   const skill = await fs.readFile(path.join(pluginRoot, "skills", "no-code-comments", "SKILL.md"), "utf8");

@@ -3,10 +3,10 @@ import * as fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { CLI_VERSION } from "../src/version.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const codex = process.env.CODEX_BIN || "codex";
-const cli = process.env.BAN_CODE_COMMENTS_EXECUTABLE;
 
 function command(args, environment) {
   const result = spawnSync(args[0], args.slice(1), { env: environment, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -21,8 +21,6 @@ function unsupported(reason) {
 if (command([codex, "--version"], process.env).status !== 0) {
   unsupported("codex executable is not available");
 }
-if (!cli) unsupported("set BAN_CODE_COMMENTS_EXECUTABLE to a built hook CLI for live smoke coverage");
-
 const authPath = process.env.CODEX_SMOKE_AUTH_FILE || (process.env.CODEX_SMOKE_REUSE_AUTH === "1" ? path.join(process.env.HOME || "", ".codex", "auth.json") : "");
 if (!authPath) unsupported("set CODEX_SMOKE_AUTH_FILE or CODEX_SMOKE_REUSE_AUTH=1 to opt into authenticated Codex coverage");
 try {
@@ -36,7 +34,7 @@ const repository = await fs.mkdtemp(path.join(os.tmpdir(), "ban-code-comments-co
 await fs.symlink(authPath, path.join(home, "auth.json"));
 await fs.writeFile(path.join(repository, "main.go"), "package main\n\nfunc main() {}\n");
 await fs.writeFile(path.join(repository, "README.md"), "# Smoke\n");
-const environment = { ...process.env, CODEX_HOME: home, BAN_CODE_COMMENTS_EXECUTABLE: cli };
+const environment = { ...process.env, CODEX_HOME: home };
 
 const marketplace = command([codex, "plugin", "marketplace", "add", root, "--json"], environment);
 if (marketplace.status !== 0) throw new Error(`marketplace setup failed: ${marketplace.output}`);
@@ -66,8 +64,8 @@ const markdownAndLiteral = await Promise.all([
 ]);
 observations.push(observation("markdown-and-literal-allowance", result.status === 0 && markdownAndLiteral[0].includes("<!--") && markdownAndLiteral[1].includes("// literal smoke"), result));
 
-result = runPrompt("Use Bash once to append the exact line // codex opaque post smoke to main.go. Do not use apply_patch or any other tool.");
-observations.push(observation("hard-opaque-post-audit", result.status === 0 && result.output.includes("PostToolUse Stopped") && (await fs.readFile(path.join(repository, "main.go"), "utf8")).includes("codex opaque post smoke"), result));
+result = runPrompt("Use Bash once to append the exact line // codex unsupported write smoke to main.go. Do not use apply_patch or any other tool.");
+observations.push(observation("unsupported-write-outside-plugin-scope", result.status === 0 && (await fs.readFile(path.join(repository, "main.go"), "utf8")).includes("codex unsupported write smoke") && !result.output.includes("PostToolUse Stopped"), result));
 
 plugin("ban-code-comments-hard-block", "remove");
 plugin("ban-code-comments-warn", "add");
@@ -76,5 +74,12 @@ result = runPrompt("Use apply_patch once to add an ordinary Go comment containin
 observations.push(observation("warn-pre-allowance", result.status === 0 && result.output.includes("codex warn smoke") && (await fs.readFile(path.join(repository, "main.go"), "utf8")).includes("codex warn smoke"), result));
 
 const failed = observations.filter((observation) => observation.status !== "passed");
-console.log(JSON.stringify({ status: failed.length === 0 ? "passed" : "failed", observations }));
+console.log(JSON.stringify({
+  status: failed.length === 0 ? "passed" : "failed",
+  release: { tag: `v${CLI_VERSION}`, cliVersion: CLI_VERSION, installation: "marketplace-plugin-launcher" },
+  plugins: ["ban-code-comments-hard-block", "ban-code-comments-warn"].map((name) => ({ name, version: CLI_VERSION })),
+  cache: "launcher-managed checksum-verified cache",
+  observations,
+  hostedOrCrossPlatform: "not exercised by this local harness",
+}));
 if (failed.length > 0) process.exit(1);
