@@ -76,7 +76,24 @@ The Action accepts the same configuration as the CLI:
 
 The Action exits `0` for a clean scan, `1` when selected findings exist, and `2` for invalid options or scan failures. Findings and operational errors therefore fail the workflow step while remaining distinguishable in the log.
 
-For direct automation outside GitHub Actions, install the released binary and run `ban-code-comments .` as a step. This repository dogfoods the current source tree in CI with `go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' .`; the fixture exclusion keeps intentional scanner inputs separate from production code. Claude hooks can invoke the same command against the changed repository or file paths.
+For direct automation outside GitHub Actions, install the released binary and run `ban-code-comments .` as a step. This repository dogfoods the current source tree in CI with `go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' --exclude 'internal/hook/testdata/**' --exclude 'plugins/**' .`; the exclusions keep intentional fixtures and generated plugin bundles separate from production code. Claude hooks can invoke the same command against the changed repository or file paths.
+
+## Codex plugins
+
+This repository provides two separately installable Codex plugins: `ban-code-comments-warn` allows supported edits and adds guidance, while `ban-code-comments-hard-block` denies reconstructible supported edits that introduce findings and stops after opaque Bash findings.
+
+Review plugin source and hook commands before trusting them, then add the repository marketplace and install one variant:
+
+```sh
+codex plugin marketplace add JustinDFuller/ban-code-comments
+codex plugin add ban-code-comments-warn@ban-code-comments
+```
+
+Use `ban-code-comments-hard-block@ban-code-comments` instead when denial is preferred, and review the enabled hook in `/hooks` after installation. The shared scanner covers the supported source and configuration languages in the language registry; Markdown, README files, literals, directives, and unsupported paths are not code-comment findings.
+
+Pre-tool evaluation reconstructs documented file-edit payloads and compares proposed findings with the file's existing findings, so unchanged legacy comments do not block unrelated edits. Opaque Bash commands are audited after execution, which reports new findings but cannot prevent the command from writing first.
+
+The guidance skill directs agents to use Git history, pull-request descriptions, simplified code, nearby README files, and Markdown instead of explanatory source comments. Roll back by disabling or removing the plugin with `codex plugin remove <plugin>@ban-code-comments`; the existing CLI, GitHub Action, and repository files are unchanged.
 
 ## Development
 
@@ -87,5 +104,7 @@ gofmt -w .
 go test ./...
 go vet ./...
 ```
+
+The isolated Codex smoke harness reports `unsupported` unless given a built hook CLI and explicit authenticated-test opt-in: `BAN_CODE_COMMENTS_EXECUTABLE=/path/to/ban-code-comments CODEX_SMOKE_REUSE_AUTH=1 npm run smoke:codex`. It uses a temporary Codex home and repository and reports live hook cases separately from unsupported coverage.
 
 Semantic-version tags matching `vMAJOR.MINOR.PATCH` publish cross-platform archives and checksums through GoReleaser.

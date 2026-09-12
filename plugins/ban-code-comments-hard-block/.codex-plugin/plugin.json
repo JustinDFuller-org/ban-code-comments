@@ -1,0 +1,14 @@
+{
+  "name": "ban-code-comments-hard-block",
+  "version": "1.0.0",
+  "description": "Block newly introduced code comments at the Codex tool boundary.",
+  "author": {
+    "name": "Justin Fuller",
+    "url": "https://github.com/JustinDFuller"
+  },
+  "repository": "https://github.com/JustinDFuller/ban-code-comments",
+  "license": "MIT",
+  "keywords": ["comments", "code quality", "hooks", "policy"],
+  "hooks": "./hooks/hooks.json",
+  "skills": "./skills/"
+}

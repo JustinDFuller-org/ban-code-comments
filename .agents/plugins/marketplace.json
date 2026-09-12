@@ -1,0 +1,32 @@
+{
+  "name": "ban-code-comments",
+  "interface": {
+    "displayName": "ban-code-comments"
+  },
+  "plugins": [
+    {
+      "name": "ban-code-comments-hard-block",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ban-code-comments-hard-block"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
+    },
+    {
+      "name": "ban-code-comments-warn",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ban-code-comments-warn"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Engineering"
+    }
+  ]
+}

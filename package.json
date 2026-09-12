@@ -7,8 +7,11 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "ncc build src/index.js --minify --source-map --license licenses.txt -o dist",
+    "build:plugins": "node scripts/build-plugins.mjs",
+    "smoke:codex": "node scripts/codex-smoke.mjs",
+    "validate:plugins": "node scripts/validate-plugins.mjs",
     "test": "node --test test/*.test.js",
-    "check": "npm test && npm run build && git diff --exit-code -- dist licenses.txt"
+    "check": "npm test && npm run validate:plugins && npm run build && git diff --exit-code -- dist licenses.txt"
   },
   "dependencies": {
     "@actions/core": "3.0.1",

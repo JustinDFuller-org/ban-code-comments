@@ -6,6 +6,7 @@ import test from "node:test";
 import crypto from "node:crypto";
 import { expectedChecksum, verifyChecksum } from "../src/checksum.js";
 import { downloadCLI, findExecutable } from "../src/downloader.js";
+import { createPluginCache, downloadPluginCLI, pluginDataRoot } from "../src/plugin-cache.js";
 import { cliArguments, parseBoolean } from "../src/inputs.js";
 import { assetName, releaseURLs, targetFor } from "../src/platform.js";
 import { runCLI } from "../src/runner.js";
@@ -236,4 +237,24 @@ test("reports subprocess launch failures while returning status 2", async () => 
     console.error = originalError;
   }
   assert.match(errors.join("\n"), /ENOENT|no such file|not found/);
+});
+
+test("keeps plugin data isolated and supports a local executable override", async () => {
+  assert.equal(pluginDataRoot({ BAN_CODE_COMMENTS_PLUGIN_DATA: "/tmp/plugin-data" }), "/tmp/plugin-data");
+  assert.equal(pluginDataRoot({ CODEX_PLUGIN_DATA: "/tmp/codex-plugin-data" }), "/tmp/codex-plugin-data");
+  assert.equal(pluginDataRoot({ CODEX_HOME: "/tmp/codex-home" }), path.join("/tmp/codex-home", "plugins", "data", "ban-code-comments"));
+  assert.equal(await downloadPluginCLI({ executable: process.execPath }), process.execPath);
+});
+
+test("serializes concurrent plugin cache writes", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "ban-code-comments-plugin-cache-test-"));
+  const source = await fs.mkdtemp(path.join(os.tmpdir(), "ban-code-comments-plugin-source-"));
+  await fs.writeFile(path.join(source, "ban-code-comments"), "binary");
+  const cache = createPluginCache(root, { target: targetFor("darwin", "arm64"), fetch: async () => ({ ok: true }) });
+  const destinations = await Promise.all([
+    cache.cacheDir(source, "ban-code-comments", "1.0.0", "darwin-arm64"),
+    cache.cacheDir(source, "ban-code-comments", "1.0.0", "darwin-arm64"),
+  ]);
+  assert.deepEqual(destinations, [destinations[0], destinations[0]]);
+  assert.equal(await fs.readFile(path.join(destinations[0], "ban-code-comments"), "utf8"), "binary");
 });
