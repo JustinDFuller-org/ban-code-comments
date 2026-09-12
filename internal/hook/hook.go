@@ -13,9 +13,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/languages"
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
-	"github.com/JustinDFuller/ban-code-comments/internal/scanner"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/languages"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/scanner"
 )
 
 type Mode string

@@ -28,7 +28,7 @@ function assetName(version, target) {
 
 function releaseURLs(version, target) {
   const tag = `v${version}`;
-  const base = `https://github.com/JustinDFuller/ban-code-comments/releases/download/${tag}`;
+  const base = `https://github.com/JustinDFuller-org/ban-code-comments/releases/download/${tag}`;
   return {
     archive: `${base}/${assetName(version, target)}`,
     checksums: `${base}/checksums.txt`,

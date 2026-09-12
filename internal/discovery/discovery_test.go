@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 func mkdirAll(path string) error {
@@ -182,5 +184,37 @@ func TestDiscoverUsesNestedRepositoryIgnoreRules(t *testing.T) {
 		if filepath.Base(candidate.Path) == "ignored.go" {
 			t.Fatalf("nested ignored candidate = %#v", candidate)
 		}
+	}
+}
+
+func TestCandidateAndIgnoreHelpers(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "main.go")
+	if err := writeFile(path, "package main\n"); err != nil {
+		t.Fatal(err)
+	}
+	if candidate, reason := candidateFor(path, root, "", Config{Languages: map[model.Language]bool{"python": true}}); candidate != nil || reason != "language filter" {
+		t.Fatalf("language filter = %#v, %q", candidate, reason)
+	}
+	if candidate, reason := candidateFor(path, root, "", Config{Includes: []string{"other/**"}}); candidate != nil || reason != "include glob" {
+		t.Fatalf("include filter = %#v, %q", candidate, reason)
+	}
+	if candidate, reason := candidateFor(filepath.Join(root, "notes.txt"), root, "", Config{}); candidate != nil || reason != "unsupported file type" {
+		t.Fatalf("unsupported = %#v, %q", candidate, reason)
+	}
+	if ignored, err := ignoredPaths(nil, ""); err != nil || len(ignored) != 0 {
+		t.Fatalf("empty ignored paths = %#v, %v", ignored, err)
+	}
+}
+
+func TestGlobHelpersHandleEmptyAndQuestionPatterns(t *testing.T) {
+	if globMatch("", "file.go") {
+		t.Fatal("empty glob matched")
+	}
+	if !globMatch("src/file.?o", "src/file.go") || globMatch("src/file.?o", "src/file.goo") {
+		t.Fatal("question glob mismatch")
+	}
+	if matchesAny([]string{"", "src/*.go"}, "src/main.go") == false {
+		t.Fatal("matchesAny missed pattern")
 	}
 }

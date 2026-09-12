@@ -10,6 +10,8 @@ import { createPluginCache, downloadPluginCLI, pluginDataRoot } from "../src/plu
 import { cliArguments, parseBoolean } from "../src/inputs.js";
 import { assetName, releaseURLs, targetFor } from "../src/platform.js";
 import { runCLI } from "../src/runner.js";
+import { main as hookMain, runHook } from "../src/hook-launcher.js";
+import { main as actionMain } from "../src/index.js";
 
 test("maps supported runner targets to release coordinates", () => {
   assert.deepEqual(targetFor("linux", "x64"), { archiveFormat: "tar.gz", releaseOS: "linux", releaseArch: "amd64" });
@@ -20,8 +22,8 @@ test("maps supported runner targets to release coordinates", () => {
   assert.throws(() => targetFor("win32", "arm64"), /unsupported runner/);
   assert.equal(assetName("1.0.0", targetFor("linux", "x64")), "ban-code-comments_1.0.0_linux_amd64.tar.gz");
   assert.deepEqual(releaseURLs("1.0.0", targetFor("linux", "x64")), {
-    archive: "https://github.com/JustinDFuller/ban-code-comments/releases/download/v1.0.0/ban-code-comments_1.0.0_linux_amd64.tar.gz",
-    checksums: "https://github.com/JustinDFuller/ban-code-comments/releases/download/v1.0.0/checksums.txt",
+    archive: "https://github.com/JustinDFuller-org/ban-code-comments/releases/download/v1.0.0/ban-code-comments_1.0.0_linux_amd64.tar.gz",
+    checksums: "https://github.com/JustinDFuller-org/ban-code-comments/releases/download/v1.0.0/checksums.txt",
   });
 });
 
@@ -257,4 +259,33 @@ test("serializes concurrent plugin cache writes", async () => {
   ]);
   assert.deepEqual(destinations, [destinations[0], destinations[0]]);
   assert.equal(await fs.readFile(path.join(destinations[0], "ban-code-comments"), "utf8"), "binary");
+});
+
+test("reports invalid hook launcher modes and runs the configured executable", async () => {
+  assert.equal(await hookMain("invalid"), 0);
+  assert.equal(await runHook("warn", { executable: process.execPath }), 1);
+});
+
+test("maps action inputs through the executable runner", async () => {
+  const calls = [];
+  const code = await actionMain({
+    core: { getInput: (name) => ({ paths: "src", format: "text" }[name] || "") },
+    download: async (version) => { calls.push(["download", version]); return "/tmp/ban-code-comments"; },
+    run: async (...args) => { calls.push(["run", ...args]); return 0; },
+  });
+  assert.equal(code, 0);
+  assert.deepEqual(calls, [["download", "1.0.0"], ["run", "/tmp/ban-code-comments", ["--format", "text", "src"]]]);
+});
+
+test("runs the hook launcher entrypoint without downloading for invalid input", async () => {
+  const originalArguments = process.argv;
+  process.argv = [process.execPath, path.resolve("src/launcher-entry.js"), "invalid"];
+  try {
+    await import("../src/launcher-entry.js");
+  } finally {
+    process.argv = originalArguments;
+  }
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(process.exitCode, 0);
+  process.exitCode = undefined;
 });

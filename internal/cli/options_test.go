@@ -3,7 +3,7 @@ package cli
 import (
 	"testing"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 func TestParseDefaults(t *testing.T) {
@@ -43,5 +43,18 @@ func TestParseRejectsInvalidValues(t *testing.T) {
 		if _, err := Parse(args); err == nil {
 			t.Errorf("Parse(%v) accepted invalid value", args)
 		}
+	}
+}
+
+func TestParseHandlesEmptyRepeatedAndShortFlags(t *testing.T) {
+	options, err := Parse([]string{"--categories", ",,ordinary", "--include", "", "--exclude", "vendor/**", "--language", "go", "file.go"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !options.Categories[model.CategoryOrdinary] || len(options.Paths) != 1 || options.Paths[0] != "file.go" {
+		t.Fatalf("options = %#v", options)
+	}
+	if _, err := Parse([]string{"--language"}); err == nil {
+		t.Fatal("missing language value accepted")
 	}
 }

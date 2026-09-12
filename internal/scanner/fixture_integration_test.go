@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/languages"
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/languages"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 type fixtureLanguage struct {

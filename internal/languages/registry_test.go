@@ -3,7 +3,7 @@ package languages
 import (
 	"testing"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 func TestLookupCoversDocumentedLanguageExamples(t *testing.T) {
@@ -28,5 +28,21 @@ func TestLookupCoversDocumentedLanguageExamples(t *testing.T) {
 func TestParseSelectionRejectsUnknownLanguage(t *testing.T) {
 	if _, err := ParseSelection([]string{"not-a-language"}); err == nil {
 		t.Fatal("ParseSelection accepted an unknown language")
+	}
+}
+
+func TestParseSelectionHandlesAliasesAndEmptyValues(t *testing.T) {
+	selection, err := ParseSelection([]string{" js, c++ ", "", "tf"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !selection[model.Language("javascript")] || !selection[model.Language("cpp")] || !selection[model.Language("terraform")] {
+		t.Fatalf("selection = %#v", selection)
+	}
+	if got, ok := Lookup("Dockerfile"); !ok || got != model.Language("dockerfile") {
+		t.Fatalf("Dockerfile = %q, %v", got, ok)
+	}
+	if _, ok := Lookup("unknown.xyz"); ok {
+		t.Fatal("unknown extension was recognized")
 	}
 }

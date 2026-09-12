@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 func TestCLIExitCodesAndOptions(t *testing.T) {
@@ -73,6 +73,67 @@ func TestCLIExitCodesAndOptions(t *testing.T) {
 	missing := runBinary(t, binary, root, "missing.go")
 	if missing.exitCode != 2 {
 		t.Fatalf("missing exit = %d, stderr = %s", missing.exitCode, missing.stderr)
+	}
+}
+
+func TestRunReportsFindingsAndDebugOutput(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "main.go")
+	if err := os.WriteFile(path, []byte("package main\n// finding\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var output, errors bytes.Buffer
+	code := run([]string{"--format", "json", "--debug", path}, bytes.NewReader(nil), &output, &errors)
+	if code != 1 || !bytes.Contains(output.Bytes(), []byte(`"findings"`)) {
+		t.Fatalf("code = %d, output = %s, errors = %s", code, output.String(), errors.String())
+	}
+}
+
+func TestRunTextCleanResult(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "main.go")
+	if err := os.WriteFile(path, []byte("package main\nvar value = 1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var output, errors bytes.Buffer
+	if code := run([]string{"--format", "text", path}, bytes.NewReader(nil), &output, &errors); code != 0 || output.Len() != 0 || errors.Len() != 0 {
+		t.Fatalf("code = %d, output = %q, errors = %q", code, output.String(), errors.String())
+	}
+}
+
+func TestRunRejectsInvalidCLIAndHookArguments(t *testing.T) {
+	for _, args := range [][]string{{"--format", "yaml"}, {"hook", "--mode"}, {"hook", "--state-dir"}, {"hook", "--unsupported"}, {"hook", "--mode", "bad"}} {
+		var output, errors bytes.Buffer
+		if code := run(args, bytes.NewReader(nil), &output, &errors); code != 2 || errors.Len() == 0 {
+			t.Errorf("run(%v) = code %d, errors %q", args, code, errors.String())
+		}
+	}
+}
+
+func TestRunHookProcessesEvent(t *testing.T) {
+	root := t.TempDir()
+	event := map[string]any{
+		"cwd": root, "hook_event_name": "PreToolUse", "tool_name": "write_file",
+		"tool_input": map[string]string{"path": "main.go", "content": "package main\n// finding\n"},
+	}
+	input, err := json.Marshal(event)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var output, errors bytes.Buffer
+	if code := run([]string{"hook", "--mode", "hard"}, bytes.NewReader(input), &output, &errors); code != 0 {
+		t.Fatalf("code = %d, errors = %s", code, errors.String())
+	}
+	if !bytes.Contains(output.Bytes(), []byte(`"decision":"block"`)) {
+		t.Fatalf("output = %s", output.String())
+	}
+}
+
+func TestRunHookAcceptsStateDirectory(t *testing.T) {
+	root := t.TempDir()
+	var output, errors bytes.Buffer
+	if code := run([]string{"hook", "--state-dir", t.TempDir()}, bytes.NewReader([]byte(`{"cwd":"`+root+`","hook_event_name":"Other"}`)), &output, &errors); code != 0 {
+		t.Fatalf("code = %d, output = %q, errors = %q", code, output.String(), errors.String())
 	}
 }
 
