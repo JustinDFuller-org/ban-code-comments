@@ -8,7 +8,7 @@ Provide installable Codex plugins that catch newly introduced code comments befo
 
 ### Requirement: Enforce the comment policy before supported proposed edits
 
-The plugins SHALL inspect reconstructible Codex `PreToolUse` file-edit events from the traditional file-write tools `apply_patch`, `edit`, `write`, `write_file`, and `file_write`. They SHALL evaluate the proposed result with the existing `ban-code-comments` language registry, scanner, and default comment categories. A hard-block plugin SHALL deny a proposed edit that introduces a finding before the tool mutates the file, while a warn plugin SHALL allow the edit and return concise guidance through Codex's model-visible `hookSpecificOutput.additionalContext`, while retaining the top-level compatibility warning field. Findings already present and unchanged in the target file SHALL not cause an unrelated edit to be denied.
+The plugins SHALL inspect reconstructible Codex `PreToolUse` file-edit events from the traditional file-write tools `apply_patch`, `edit`, `write`, `write_file`, and `file_write`. They SHALL evaluate the proposed result with the existing `ban-code-comments` language registry, scanner, and default comment categories. A hard-block plugin SHALL deny a proposed edit that introduces a finding before the tool mutates the file, while a warn plugin SHALL allow the edit and return concise model-visible guidance. Findings already present and unchanged in the target file SHALL not cause an unrelated edit to be denied.
 
 #### Scenario: Hard mode denies a newly introduced supported comment
 
@@ -18,7 +18,7 @@ The plugins SHALL inspect reconstructible Codex `PreToolUse` file-edit events fr
 #### Scenario: Warn mode allows the same proposed comment
 
 - **WHEN** an agent proposes the same edit through the warn plugin
-- **THEN** the plugin allows the tool call and returns concise guidance identifying the finding and an approved documentation alternative through nested Codex hook context and the compatibility warning field
+- **THEN** the plugin allows the tool call and returns concise guidance identifying the finding and an approved documentation alternative through Codex's model-visible hook context, while retaining a compatibility warning field
 
 #### Scenario: Existing comments do not block unrelated edits
 
@@ -32,17 +32,22 @@ The plugins SHALL inspect reconstructible Codex `PreToolUse` file-edit events fr
 
 ### Requirement: Preserve non-code and unsupported write behavior
 
-The plugins SHALL not deny or warn on writes to Markdown, README files, unsupported file types, or paths that do not introduce a finding recognized by the existing scanner. Read-only tool calls and unrelated commands SHALL continue without policy output.
+The plugins SHALL not deny or warn on writes to Markdown, README files, unsupported file types, or paths that do not introduce a finding recognized by the existing scanner. They SHALL not register enforcement hooks for Bash, shell, exec, MCP, or other unsupported tools. Read-only tool calls and unrelated commands SHALL continue without policy output.
 
 #### Scenario: Markdown documentation remains writable
 
-- **WHEN** an agent writes explanatory content or Markdown comments to a `.md` file
+- **WHEN** an agent writes explanatory content or Markdown comments to a `.md` file through a traditional file-write tool
 - **THEN** the tool call proceeds without a code-comment policy denial or warning
 
 #### Scenario: Clean supported code remains writable
 
-- **WHEN** an agent proposes a supported-language edit with no newly introduced findings
+- **WHEN** an agent proposes a supported-language edit through a traditional file-write tool with no newly introduced findings
 - **THEN** the tool call proceeds without a policy warning or denial
+
+#### Scenario: Unsupported tools remain outside plugin scope
+
+- **WHEN** an agent invokes Bash, shell, exec, MCP, or another tool that is not one of the five traditional file-write tools
+- **THEN** the plugin does not perform comment-policy enforcement for that tool event
 
 ### Requirement: Provide distinct installable plugin variants
 
