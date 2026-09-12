@@ -274,7 +274,7 @@ test("maps action inputs through the executable runner", async () => {
     run: async (...args) => { calls.push(["run", ...args]); return 0; },
   });
   assert.equal(code, 0);
-  assert.deepEqual(calls, [["download", "1.0.0"], ["run", "/tmp/ban-code-comments", ["--format", "text", "src"]]]);
+  assert.deepEqual(calls, [["download", "1.0.1"], ["run", "/tmp/ban-code-comments", ["--format", "text", "src"]]]);
 });
 
 test("runs the hook launcher entrypoint without downloading for invalid input", async () => {
