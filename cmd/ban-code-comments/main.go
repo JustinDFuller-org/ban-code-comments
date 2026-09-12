@@ -75,6 +75,12 @@ func runHook(args []string, input io.Reader, output, errorOutput io.Writer) int 
 			}
 			mode = parsed
 			index++
+		case "--state-dir":
+			if index+1 >= len(args) {
+				fmt.Fprintln(errorOutput, "missing value for --state-dir")
+				return 2
+			}
+			index++
 		default:
 			if strings.HasPrefix(args[index], "-") {
 				fmt.Fprintf(errorOutput, "unsupported hook option %q\n", args[index])
