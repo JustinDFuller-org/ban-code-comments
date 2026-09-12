@@ -20,7 +20,7 @@ ex:
 - "Feedback indicates the summary comment is too verbose. Authors simply ignore it, rather than engaging with it. So, rather than improving the experience, it clutters the interface."
 -->
 
-TODO
+The repository had no coverage signal or merge policy, so tests could pass while production paths became less exercised.
 
 ## Results
 
@@ -34,8 +34,8 @@ ex:
 - "The summary will be more concise. It will have a clear color indicator of the status. It will have a 1-2 sentence summary of the results. Detailed information still available, but it hidden by default."
 -->
 
-- TODO
-- TODO
+- CI now produces comparable Go and JavaScript Cobertura reports and publishes them to GitHub Code Quality for the default branch and eligible same-repository pull requests.
+- Go production coverage is now above 90 percent, while fork pull requests continue testing without attempting a privileged upload.
 
 ## Demonstrate
 
@@ -48,4 +48,4 @@ It includes a copy/paste of an output, a screenshot, a video, a link, etc. that 
 These are not "steps for you to test" but are "here's what I did to test and here were the actual results".
 -->
 
-TODO
+Locally, `go test ./... -coverprofile=coverage/go.out`, the pinned Cobertura conversion, `npm test`, and `npm run coverage` pass; the generated Go report is 90.08 percent line coverage and the JavaScript report is 90.7 percent.

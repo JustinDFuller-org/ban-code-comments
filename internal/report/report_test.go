@@ -2,10 +2,15 @@ package report
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/JustinDFuller/ban-code-comments/internal/model"
 )
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) { return 0, errors.New("write failed") }
 
 func TestJSONProducesStableResult(t *testing.T) {
 	result := model.Result{Findings: []model.Finding{{Path: "main.go", Language: "go", Category: model.CategoryOrdinary, Range: model.Range{Start: model.Position{Line: 2, Column: 1}, End: model.Position{Line: 2, Column: 10}}, Text: "// note"}}, Summary: model.Summary{FilesScanned: 1, Findings: 1}}
@@ -28,5 +33,14 @@ func TestTextProducesLineOutput(t *testing.T) {
 	}
 	if got, want := output.String(), "main.go:2:1: // note\n"; got != want {
 		t.Fatalf("text = %q, want %q", got, want)
+	}
+}
+
+func TestReportsReturnWriterErrors(t *testing.T) {
+	if err := JSON(failingWriter{}, model.Result{}); err == nil {
+		t.Fatal("JSON swallowed writer error")
+	}
+	if err := Text(failingWriter{}, []model.Finding{{Path: "main.go"}}); err == nil {
+		t.Fatal("Text swallowed writer error")
 	}
 }

@@ -45,3 +45,16 @@ func TestParseRejectsInvalidValues(t *testing.T) {
 		}
 	}
 }
+
+func TestParseHandlesEmptyRepeatedAndShortFlags(t *testing.T) {
+	options, err := Parse([]string{"--categories", ",,ordinary", "--include", "", "--exclude", "vendor/**", "--language", "go", "file.go"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !options.Categories[model.CategoryOrdinary] || len(options.Paths) != 1 || options.Paths[0] != "file.go" {
+		t.Fatalf("options = %#v", options)
+	}
+	if _, err := Parse([]string{"--language"}); err == nil {
+		t.Fatal("missing language value accepted")
+	}
+}
