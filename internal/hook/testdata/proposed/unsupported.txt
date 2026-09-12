@@ -1,0 +1,1 @@
+// Unsupported text is not scanned.

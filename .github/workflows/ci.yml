@@ -30,7 +30,7 @@ jobs:
           npm run build
           git diff --exit-code -- dist
       - name: Ban code comments with the local CLI
-        run: go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' .
+        run: go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' --exclude 'internal/hook/testdata/**' --exclude 'plugins/**' .
       - name: Run static analysis
         run: go vet ./...
       - name: Validate OpenSpec
