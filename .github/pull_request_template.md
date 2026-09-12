@@ -1,6 +1,6 @@
 <!--
 Rules:
-- 400 character max.
+- 300 words max.
 - Do not regurgitate what can be found by reading the code.
 - Brevity. Be concise. Be terse.
 - Avoid jargon. Use human-readable language.
@@ -45,7 +45,7 @@ How can a reviewer see for themselves that it actually works?
 This does not include "I ran the unit/integration/e2e tests".
 This is something you have done manually to see for yourself that the change does exactly what it intends.
 It includes a copy/paste of an output, a screenshot, a video, a link, etc. that allows the reviewer to see what happened.
-It can even include steps the reviewer can follow to see the change for themselves.
+These are not "steps for you to test" but are "here's what I did to test and here were the actual results".
 -->
 
 TODO
