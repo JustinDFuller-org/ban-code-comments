@@ -34,9 +34,49 @@ Go; JavaScript, TypeScript, JSX, and TSX; Python; Rust; Java; C, C++, and C#; Ko
 
 The scanner ignores comment-shaped text inside strings, raw strings, templates, escaped literals, heredocs, and triple-quoted literals. Unsupported or irrelevant files are skipped; use `--debug` to inspect those decisions.
 
-## Automation
+## GitHub Actions
 
-In GitHub Actions, install the released binary and run `ban-code-comments .` as a step. Preserve its exit status so findings fail the job. This repository dogfoods the current source tree in CI with `go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' .`; the fixture exclusion keeps intentional scanner inputs separate from production code. Claude hooks can invoke the same command against the changed repository or file paths.
+The Action requires a checkout step and runs with read-only repository access. It downloads the exact CLI version coupled to the Action release, verifies the published checksum, caches the runner-specific binary, and preserves the CLI's report and exit status.
+
+```yaml
+name: Ban code comments
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  comments:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: JustinDFuller/ban-code-comments@v1
+        with:
+          format: text
+          languages: go,python,typescript
+          exclude: |
+            vendor/**
+            internal/scanner/testdata/fixtures/**
+```
+
+Use `@v1` to receive compatible releases automatically. For reproducible workflows, pin an exact release such as `@v1.0.0` or pin the Action to a full commit SHA. The moving `v1` tag is maintained to the latest compatible release.
+
+The Action accepts the same configuration as the CLI:
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `paths` | `.` | Files or directories to scan; separate multiple values with newlines. |
+| `languages` | — | Languages to scan; separate values with commas or newlines. |
+| `categories` | — | Comment categories to report; separate values with commas. |
+| `include` | — | File globs to include; separate multiple values with newlines. |
+| `exclude` | — | File globs to exclude; separate multiple values with newlines. |
+| `format` | `json` | Output format: `json` or `text`. |
+| `debug` | `false` | Set to `true` to write skipped-file diagnostics to stderr. |
+
+The Action exits `0` for a clean scan, `1` when selected findings exist, and `2` for invalid options or scan failures. Findings and operational errors therefore fail the workflow step while remaining distinguishable in the log.
+
+For direct automation outside GitHub Actions, install the released binary and run `ban-code-comments .` as a step. This repository dogfoods the current source tree in CI with `go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' .`; the fixture exclusion keeps intentional scanner inputs separate from production code. Claude hooks can invoke the same command against the changed repository or file paths.
 
 ## Development
 

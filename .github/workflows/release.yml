@@ -8,8 +8,13 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-publication
+  cancel-in-progress: false
+
 jobs:
   goreleaser:
+    if: contains(github.ref_name, '.')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,10 +29,20 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
-          if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-((0|[1-9][0-9]*|[A-Za-z-][0-9A-Za-z-]*)(\.(0|[1-9][0-9]*|[A-Za-z-][0-9A-Za-z-]*))*))?(\+([0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*))?$ ]]; then
+          if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
             echo "unsupported release tag: $RELEASE_TAG" >&2
             exit 1
           fi
+      - name: Install Action dependencies
+        run: npm ci
+      - name: Build bundled Action distribution
+        run: npm run build
+      - name: Verify bundled Action distribution
+        run: git diff --exit-code -- dist
+      - name: Validate Action and CLI release version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/check-release-version.mjs
       - name: Release
         uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
         with:
@@ -35,3 +50,21 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update major Action tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: |
+          major_tag="${RELEASE_TAG%%.*}"
+          latest_major_tag="$(git tag --list "${major_tag}.*" | sort -V | tail -n 1)"
+          if [[ -n "$latest_major_tag" && "$(printf '%s\n' "$latest_major_tag" "$RELEASE_TAG" | sort -V | tail -n 1)" != "$RELEASE_TAG" ]]; then
+            echo "not moving $major_tag backward from $latest_major_tag to $RELEASE_TAG"
+            exit 0
+          fi
+          git tag -f "$major_tag" "$RELEASE_SHA"
+          remote_major_sha="$(git ls-remote --refs origin "refs/tags/$major_tag" | awk '{print $1}')"
+          if [[ -n "$remote_major_sha" ]]; then
+            git push origin "refs/tags/$major_tag" --force-with-lease="refs/tags/$major_tag:$remote_major_sha"
+          else
+            git push origin "refs/tags/$major_tag" --force-with-lease="refs/tags/$major_tag:"
+          fi

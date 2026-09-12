@@ -1,0 +1,20 @@
+{
+  "name": "ban-code-comments-action",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "GitHub Action wrapper for ban-code-comments",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "ncc build src/index.js --minify --source-map --license licenses.txt -o dist",
+    "test": "node --test test/*.test.js",
+    "check": "npm test && npm run build && git diff --exit-code -- dist licenses.txt"
+  },
+  "dependencies": {
+    "@actions/core": "3.0.1",
+    "@actions/tool-cache": "4.0.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "0.45.0"
+  }
+}
