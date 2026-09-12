@@ -45,7 +45,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: coverage-reports
-          path: coverage/*-cobertura.xml
+          path: |
+            coverage/go-cobertura.xml
+            coverage/cobertura-coverage.xml
           if-no-files-found: error
           retention-days: 7
       - name: Check bundled Action distribution
