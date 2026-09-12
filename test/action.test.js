@@ -22,8 +22,8 @@ test("maps supported runner targets to release coordinates", () => {
   assert.throws(() => targetFor("win32", "arm64"), /unsupported runner/);
   assert.equal(assetName("1.0.0", targetFor("linux", "x64")), "ban-code-comments_1.0.0_linux_amd64.tar.gz");
   assert.deepEqual(releaseURLs("1.0.0", targetFor("linux", "x64")), {
-    archive: "https://github.com/JustinDFuller/ban-code-comments/releases/download/v1.0.0/ban-code-comments_1.0.0_linux_amd64.tar.gz",
-    checksums: "https://github.com/JustinDFuller/ban-code-comments/releases/download/v1.0.0/checksums.txt",
+    archive: "https://github.com/JustinDFuller-org/ban-code-comments/releases/download/v1.0.0/ban-code-comments_1.0.0_linux_amd64.tar.gz",
+    checksums: "https://github.com/JustinDFuller-org/ban-code-comments/releases/download/v1.0.0/checksums.txt",
   });
 });
 

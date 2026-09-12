@@ -6,8 +6,8 @@ import (
 	"io"
 	"strings"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/languages"
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/languages"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 type Format string

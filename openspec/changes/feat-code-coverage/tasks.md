@@ -17,17 +17,17 @@
 ## 4. Integrate coverage into GitHub Actions
 
 - [x] 4.1 Update the CI test job to generate Go and JavaScript reports with identical source scope on default-branch pushes and pull requests; verify workflow YAML structure and local report commands.
-- [x] 4.2 Upload the reports as one artifact and add a dependent upload job with only `contents: read` and `code-quality: write`; verify both labeled reports use immutable action pins and the upload job receives the expected files.
-- [x] 4.3 Restrict Code Quality uploads to eligible default-branch and same-repository pull-request events, preserving normal `pull_request` execution and fork-safe skip behavior; verify fork handling does not claim successful publication or fail tests solely because upload permission is unavailable.
+- [x] 4.2 Upload both reports as one short-retention artifact and add a dependent native coverage job with only `contents: read`; verify the pinned artifact action receives the expected files.
+- [x] 4.3 Add the repository-owned weighted aggregate coverage script and native `coverage` check with a 90 percent minimum; verify fork pull requests use the same read-only path.
 
 ## 5. Validate the repository integration
 
 - [x] 5.1 Run the complete local validation suite, including Go tests, race tests, vet, formatting, JavaScript tests, package/build checks, report validation, strict OpenSpec validation, and `git diff --check`; verify all required checks pass.
-- [ ] 5.2 Run the workflow on `main` and a same-repository pull request; verify GitHub Code Quality shows aggregate line coverage, default-branch comparison, and changed-file deltas for both reports.
+- [ ] 5.2 Run the workflow on `main` and a same-repository pull request; verify the native `coverage` check passes at the measured aggregate and publishes the report summary and artifacts.
 
-## 6. Pilot and activate enforcement
+## 6. Migrate organization ownership and activate enforcement
 
-- [ ] 6.1 Enable GitHub Code Quality and configure the default-branch ruleset with `Restrict code coverage` in Evaluate mode; verify the minimum is the greater of 90 percent and the hosted default-branch aggregate baseline, with a one-percentage-point maximum drop.
-- [ ] 6.2 Exercise a passing pull request, a deliberately below-threshold pull request, and a permission-limited fork-style path; verify Evaluate mode records would-block behavior, fork publication remains explicitly unavailable, and no misleading green coverage check is produced.
-- [ ] 6.3 Change the ruleset to Active after the hosted pilot is accepted; verify the below-threshold pull request is merge-blocked and the restored-coverage pull request is mergeable.
-- [ ] 6.4 Document the coverage commands, GitHub Code Quality prerequisite, aggregate line-coverage policy, fork limitation, and rollback procedure; verify the documentation matches the implemented workflow and ruleset.
+- [x] 6.1 Migrate the Go module/import path, release URLs, Action examples, plugin metadata, tests, and generated bundles to `JustinDFuller-org`; verify no repository-owned old-owner references remain.
+- [ ] 6.2 Exercise a passing pull request, a deliberately below-threshold pull request, and a fork-style read-only path; verify the native check succeeds or fails truthfully at 90 percent.
+- [ ] 6.3 Require the native `coverage` status check in the organization repository ruleset after the hosted pilot is accepted; verify below-threshold changes are merge-blocked.
+- [x] 6.4 Document the coverage commands, native Actions gate, artifact retention, organization namespace, fork behavior, and rollback procedure; verify documentation matches the workflow.

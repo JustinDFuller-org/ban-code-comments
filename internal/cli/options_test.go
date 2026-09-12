@@ -3,7 +3,7 @@ package cli
 import (
 	"testing"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 func TestParseDefaults(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 func JSON(writer io.Writer, result model.Result) error {

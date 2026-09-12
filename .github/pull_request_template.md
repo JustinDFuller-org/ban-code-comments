@@ -34,8 +34,8 @@ ex:
 - "The summary will be more concise. It will have a clear color indicator of the status. It will have a 1-2 sentence summary of the results. Detailed information still available, but it hidden by default."
 -->
 
-- CI now produces comparable Go and JavaScript Cobertura reports and publishes them to GitHub Code Quality for the default branch and eligible same-repository pull requests.
-- Go production coverage is now above 90 percent, while fork pull requests continue testing without attempting a privileged upload.
+- CI now produces comparable Go and JavaScript Cobertura reports, retains them as an artifact, and runs a native weighted aggregate coverage check at 90 percent for default-branch and pull-request workflows.
+- Go and JavaScript production coverage combine to 90.21 percent, and fork pull requests use the same read-only test, artifact, and coverage path.
 
 ## Demonstrate
 
@@ -48,4 +48,4 @@ It includes a copy/paste of an output, a screenshot, a video, a link, etc. that 
 These are not "steps for you to test" but are "here's what I did to test and here were the actual results".
 -->
 
-Locally, `go test ./... -coverprofile=coverage/go.out`, the pinned Cobertura conversion, `npm test`, and `npm run coverage` pass; the generated Go report is 90.08 percent line coverage and the JavaScript report is 90.7 percent.
+Locally, `go test ./... -coverprofile=coverage/go.out`, the pinned Cobertura conversion, `npm test`, `npm run coverage`, and `node scripts/check-coverage.mjs coverage/go-cobertura.xml coverage/cobertura-coverage.xml --minimum 90` pass; the weighted aggregate is 90.21 percent (1,770/1,962 lines), and the deliberate 91 percent check fails as expected.

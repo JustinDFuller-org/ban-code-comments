@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 func TestCLIExitCodesAndOptions(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 func TestParseModeAndProcessBranches(t *testing.T) {

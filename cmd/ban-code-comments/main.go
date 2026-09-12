@@ -6,12 +6,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/cli"
-	"github.com/JustinDFuller/ban-code-comments/internal/discovery"
-	"github.com/JustinDFuller/ban-code-comments/internal/hook"
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
-	"github.com/JustinDFuller/ban-code-comments/internal/report"
-	"github.com/JustinDFuller/ban-code-comments/internal/scanner"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/cli"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/discovery"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/hook"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/report"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/scanner"
 )
 
 func main() {

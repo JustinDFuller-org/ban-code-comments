@@ -10,9 +10,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/languages"
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
-	"github.com/JustinDFuller/ban-code-comments/internal/scanner"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/languages"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/scanner"
 )
 
 func TestCheckedInHookEventsDecode(t *testing.T) {

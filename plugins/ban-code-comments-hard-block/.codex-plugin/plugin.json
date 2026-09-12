@@ -6,7 +6,7 @@
     "name": "Justin Fuller",
     "url": "https://github.com/JustinDFuller"
   },
-  "repository": "https://github.com/JustinDFuller/ban-code-comments",
+  "repository": "https://github.com/JustinDFuller-org/ban-code-comments",
   "license": "MIT",
   "keywords": ["comments", "code quality", "hooks", "policy"],
   "hooks": "./hooks/hooks.json",

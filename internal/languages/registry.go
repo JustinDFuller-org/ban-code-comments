@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/JustinDFuller/ban-code-comments/internal/model"
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 var extensionLanguages = map[string]model.Language{

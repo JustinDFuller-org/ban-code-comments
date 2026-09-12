@@ -6,54 +6,55 @@ See proposal.md - Why. The repository currently has one CI workflow that runs th
 
 **Goals:**
 
-- Publish comparable Go and JavaScript Cobertura reports to GitHub Code Quality.
-- Make aggregate line coverage visible on pull requests and enforce a minimum of at least 90 percent after the baseline is raised.
-- Keep the privileged upload permission isolated from candidate test execution where practical.
-- Establish hosted evidence for evaluation, activation, fork behavior, and rollback.
+- Publish comparable Go and JavaScript Cobertura reports as GitHub Actions artifacts.
+- Make weighted aggregate line coverage visible in the Actions job summary and enforce a minimum of at least 90 percent.
+- Keep the coverage gate read-only and safe for fork pull requests.
+- Establish hosted evidence for the native gate, organization status-check configuration, and fork behavior.
+- Migrate repository-owned URLs and the Go module namespace to `JustinDFuller-org`.
 
 **Non-Goals:**
 
-- Changing the CLI, Action inputs, scanner policy, hook behavior, or release artifacts.
-- Enforcing separate per-language thresholds; the selected policy is one repository aggregate.
-- Adding Codecov, Coveralls, or another external coverage service.
-- Treating branch, function, or statement coverage as GitHub's enforcement metric; GitHub evaluates line coverage.
+- Changing the CLI, Action inputs, scanner policy, or hook behavior.
+- Enforcing separate per-language thresholds; the selected policy is one weighted repository aggregate.
+- Adding Codecov, Coveralls, GitHub Code Quality, or another external coverage service.
+- Treating branch, function, or statement coverage as the enforcement metric; the gate evaluates line coverage.
 
 ## Decisions
 
-### Extend the existing CI workflow with a separate upload job
+### Extend the existing CI workflow with a native coverage job
 
-The test job will generate both reports and upload them as one artifact. A dependent upload job will download the artifact and call GitHub's coverage uploader twice, once for Go and once for JavaScript. This avoids running the test suites twice and keeps `code-quality: write` off the test job. A separate workflow was considered, but would duplicate the current test setup or require additional coordination.
+The test job will generate both reports and upload them as one short-retention artifact. A dependent `coverage` job will download the artifact and run a checked-in Node script that parses both Cobertura roots, sums covered and valid lines, writes a job summary, and fails below 90 percent. This avoids running the test suites twice and needs only `contents: read`.
 
-### Use GitHub Code Quality as the reporting and enforcement system
+### Use repository-owned Actions for reporting and enforcement
 
-The repository will use `actions/upload-code-coverage` pinned to the verified `v1` commit `1c15be36fc3733ba839b1dd643bd9556e4426dc1`, with `actions/upload-artifact` pinned to the verified `v4` commit `ea165f8d65b6e75b540449e92b4886f43607fa02`. This matches the requested GitHub-native workflow and avoids maintaining a third-party service. The upload job will have only `contents: read` and `code-quality: write` permissions.
+The repository will use the pinned `actions/upload-artifact` v4 commit already used by CI. The native script will be the source of truth for the threshold, and the organization repository may require the resulting `coverage` check through its normal status-check ruleset. No paid Code Quality integration or privileged upload is required.
 
 ### Convert each language's native output to Cobertura
 
 Go will use `go test ./... -coverprofile` and the pinned `github.com/boumenot/gocover-cobertura@v1.5.0` converter with strict path resolution. JavaScript will add the pinned `c8` development dependency and generate Cobertura output from the existing `node:test` suite. The JavaScript report will include `src/**/*.js` and exclude tests, `dist`, plugin bundles, and coverage output.
 
-### Establish the baseline before activating the threshold
+### Establish the baseline before requiring the threshold
 
-Implementation will first add tests and narrowly scoped testability refactoring until complete Go production coverage reaches at least 90 percent. The ruleset will then be configured in Evaluate mode. After real pull requests confirm that reports, aggregate calculations, fork handling, and expected violations behave correctly, the minimum will be set to the greater of 90 percent and the hosted default-branch baseline and the ruleset will become Active. The maximum drop will be one percentage point; GitHub treats zero as disabled.
+Implementation will first add tests and narrowly scoped testability refactoring until complete Go production coverage reaches at least 90 percent. After real pull requests confirm report generation, weighted aggregation, threshold failures, and fork handling, the organization repository ruleset may require the `coverage` job. The fixed minimum is 90 percent.
 
 ### Use pull requests without privileged candidate execution
 
-Coverage will run from the normal `pull_request` event and will use the pull-request head commit for report mapping. The workflow will not use `pull_request_target` to execute candidate code. Fork uploads will be skipped by condition and reported as unavailable rather than green coverage publication.
+Coverage will run from the normal `pull_request` event. The workflow will not use `pull_request_target` to execute candidate code or require secrets. Fork pull requests run the same tests, artifact upload, and native gate with read-only permissions.
 
 ## Risks / Trade-offs
 
-- [GitHub Code Quality or coverage restriction is unavailable on the repository plan] -> Verify availability before implementation; do not silently substitute an external service.
-- [Go and JavaScript reports are aggregated in a way that hides a weak individual product] -> Keep the aggregate policy explicit, publish separate labeled reports, and retain the per-file breakdown for review.
-- [Cobertura path mapping is incorrect] -> Validate report filenames against repository-relative production paths locally and in a hosted run before enabling the ruleset.
-- [Fork pull requests cannot upload with write permission] -> Keep fork-safe conditional uploads and verify that skipped publication does not leave a misleading required check or unblock claim.
-- [The 90 percent threshold blocks existing work] -> Raise the Go baseline before activation and pilot the ruleset in Evaluate mode.
+- [Actions minutes or artifact storage are constrained] -> Keep artifact retention short and make the gate depend only on the existing test job.
+- [Go and JavaScript reports are aggregated in a way that hides a weak individual product] -> Keep the aggregate policy explicit, publish the per-language reports, and retain the per-file breakdown in the artifact.
+- [Cobertura path mapping is incorrect] -> Validate report filenames against repository-relative production paths locally and in a hosted run before requiring the check.
+- [The 90 percent threshold blocks existing work] -> Raise the Go baseline before requiring the status check.
+- [Old-owner references keep downloading from the former repository] -> Migrate the Go module, imports, release URLs, Action examples, plugin metadata, tests, and generated bundles together.
 
 ## Migration Plan
 
 1. Add coverage generation, report validation, and targeted Go tests without enabling merge protection.
-2. Run the workflow on `main` and a same-repository pull request to establish comparable GitHub baselines.
-3. Enable or confirm GitHub Code Quality and create or update the default-branch ruleset in Evaluate mode.
-4. Exercise a passing pull request, a below-threshold pull request, and a fork-style permission-limited path.
-5. Set the final minimum from the higher of 90 percent and the hosted baseline, then change enforcement to Active.
+2. Migrate all repository-owned URLs and module/import paths to `JustinDFuller-org`.
+3. Run the workflow on `main` and a same-repository pull request to establish hosted native-gate evidence.
+4. Exercise a passing pull request, a deliberately below-threshold pull request, and a fork-style read-only path.
+5. Require the `coverage` status check in the organization repository ruleset after the pilot is accepted.
 
-To roll back, change the ruleset to Evaluate or disable the Restrict code coverage rule; report generation and pull-request visibility can remain enabled independently.
+To roll back, remove the `coverage` status check from the repository ruleset; report generation and artifact retention can remain enabled independently.

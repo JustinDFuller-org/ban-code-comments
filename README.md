@@ -4,9 +4,9 @@
 
 ## Install
 
-Download the archive for your platform from the [GitHub Releases](https://github.com/JustinDFuller/ban-code-comments/releases) page, verify it with `checksums.txt`, and place `ban-code-comments` on your `PATH`. Releases include macOS arm64/amd64, Linux arm64/amd64, and Windows amd64 binaries.
+Download the archive for your platform from the [GitHub Releases](https://github.com/JustinDFuller-org/ban-code-comments/releases) page, verify it with `checksums.txt`, and place `ban-code-comments` on your `PATH`. Releases include macOS arm64/amd64, Linux arm64/amd64, and Windows amd64 binaries.
 
-For local development, run `go install github.com/JustinDFuller/ban-code-comments/cmd/ban-code-comments@latest`.
+For local development, run `go install github.com/JustinDFuller-org/ban-code-comments/cmd/ban-code-comments@latest`.
 
 ## Usage
 
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: JustinDFuller/ban-code-comments@v1
+      - uses: JustinDFuller-org/ban-code-comments@v1
         with:
           format: text
           languages: go,python,typescript
@@ -85,7 +85,7 @@ This repository provides two separately installable Codex plugins: `ban-code-com
 Review plugin source and hook commands before trusting them, then add the repository marketplace and install one variant:
 
 ```sh
-codex plugin marketplace add JustinDFuller/ban-code-comments
+codex plugin marketplace add JustinDFuller-org/ban-code-comments
 codex plugin add ban-code-comments-warn@ban-code-comments
 ```
 
@@ -110,17 +110,17 @@ npm run coverage
 
 ## Coverage policy
 
-CI measures all Go production packages and JavaScript files under `src/` using the existing test suites, converts both reports to Cobertura XML, and publishes separate `code-coverage/go` and `code-coverage/javascript` reports to GitHub Code Quality.
+CI measures all Go production packages and JavaScript files under `src/` using the existing test suites, converts both reports to Cobertura XML, stores them as a short-retention artifact, and runs a native `coverage` check.
 
 Run the reports locally with `go test ./... -coverprofile=coverage/go.out && go run github.com/boumenot/gocover-cobertura@v1.5.0 < coverage/go.out > coverage/go-cobertura.xml` and `npm run coverage`; the Go report must remain at or above 90 percent aggregate line coverage before the repository rule is activated.
 
-GitHub Code Quality must be enabled for the repository before coverage reports can appear on pull requests or a `Restrict code coverage` ruleset can be evaluated.
+The native `coverage` check computes weighted aggregate line coverage across both reports and fails below 90 percent. The organization repository can require that check through its normal status-check ruleset after hosted validation.
 
-The repository policy uses one aggregate line-coverage threshold across Go and JavaScript, with the active minimum set to the greater of 90 percent and the default-branch baseline and a maximum allowed drop of one percentage point.
+The repository policy uses one weighted aggregate line-coverage threshold across Go and JavaScript with a minimum of 90 percent. Reports remain available in the Actions artifact for seven days.
 
-Fork pull requests still run the test and report-generation job, but the privileged Code Quality upload is skipped because fork workflows cannot receive `code-quality: write`; skipped publication is reported as unavailable rather than successful.
+Fork pull requests run the same test, report-generation, artifact, and native coverage jobs with read-only permissions; no privileged candidate workflow or Code Quality upload is needed.
 
-To roll back enforcement, change the default-branch ruleset to Evaluate or disable its `Restrict code coverage` rule; report generation and pull-request visibility can remain enabled independently.
+To roll back enforcement, remove the `coverage` status check from the organization repository ruleset; report generation and artifact retention can remain enabled independently.
 
 The isolated Codex smoke harness reports `unsupported` unless given a built hook CLI and explicit authenticated-test opt-in: `BAN_CODE_COMMENTS_EXECUTABLE=/path/to/ban-code-comments CODEX_SMOKE_REUSE_AUTH=1 npm run smoke:codex`. It uses a temporary Codex home and repository and reports live hook cases separately from unsupported coverage.
 
