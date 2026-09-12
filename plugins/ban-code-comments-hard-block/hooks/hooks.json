@@ -2,18 +2,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": ".*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${PLUGIN_ROOT}/bin/launcher.js --mode hard"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": ".*",
+        "matcher": "^(apply_patch|edit|write|write_file|file_write)$",
         "hooks": [
           {
             "type": "command",

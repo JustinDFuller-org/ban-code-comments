@@ -2,8 +2,6 @@ package hook
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,11 +36,15 @@ type Event struct {
 }
 
 type Response struct {
-	Decision      string `json:"decision,omitempty"`
-	Reason        string `json:"reason,omitempty"`
-	SystemMessage string `json:"systemMessage,omitempty"`
-	StopReason    string `json:"stopReason,omitempty"`
-	Continue      *bool  `json:"continue,omitempty"`
+	Decision           string              `json:"decision,omitempty"`
+	Reason             string              `json:"reason,omitempty"`
+	SystemMessage      string              `json:"systemMessage,omitempty"`
+	HookSpecificOutput *HookSpecificOutput `json:"hookSpecificOutput,omitempty"`
+}
+
+type HookSpecificOutput struct {
+	HookEventName     string `json:"hookEventName,omitempty"`
+	AdditionalContext string `json:"additionalContext,omitempty"`
 }
 
 type OperationalError struct {
@@ -65,11 +67,6 @@ type fileChange struct {
 	Delete     bool
 }
 
-type workspaceState struct {
-	Root  string            `json:"root"`
-	Files map[string][]byte `json:"files"`
-}
-
 var selectedCategories = map[model.Category]bool{
 	model.CategoryOrdinary:      true,
 	model.CategoryDocumentation: true,
@@ -83,23 +80,26 @@ func ParseMode(value string) (Mode, error) {
 	return mode, nil
 }
 
-func Run(input io.Reader, output io.Writer, mode Mode, stateDirectory string) error {
+func Run(input io.Reader, output io.Writer, mode Mode) error {
 	decoder := json.NewDecoder(input)
 	var event Event
 	if err := decoder.Decode(&event); err != nil {
 		return writeResponse(output, responseForError(mode, "invalid_event", fmt.Sprintf("could not decode hook event: %v", err)))
 	}
-	response := Process(event, mode, stateDirectory)
+	response := Process(event, mode)
 	return writeResponse(output, response)
 }
 
-func Process(event Event, mode Mode, stateDirectory string) Response {
+func Process(event Event, mode Mode) Response {
 	if mode != ModeHard && mode != ModeWarn {
 		return responseForError(mode, "invalid_mode", fmt.Sprintf("unsupported hook mode %q", mode))
 	}
 
 	eventName := strings.ToLower(strings.TrimSpace(event.EventName))
 	toolName := strings.ToLower(strings.TrimSpace(event.ToolName))
+	if eventName != "pretooluse" && eventName != "pre_tool_use" {
+		return Response{}
+	}
 	if event.CWD == "" {
 		cwd, err := os.Getwd()
 		if err != nil {
@@ -112,27 +112,10 @@ func Process(event Event, mode Mode, stateDirectory string) Response {
 		return responseForError(mode, "cwd_invalid", err.Error())
 	}
 
-	switch eventName {
-	case "pretooluse", "pre_tool_use":
-		return processPre(event, toolName, root, mode, stateDirectory)
-	case "posttooluse", "post_tool_use":
-		return processPost(event, toolName, root, mode, stateDirectory)
-	default:
-		return Response{}
-	}
+	return processPre(event, toolName, root, mode)
 }
 
-func processPre(event Event, toolName, root string, mode Mode, stateDirectory string) Response {
-	if toolName == "bash" || toolName == "shell" || toolName == "exec" {
-		state, err := captureWorkspace(root)
-		if err != nil {
-			return responseForError(mode, "workspace_capture_failed", err.Error())
-		}
-		if err := saveState(stateDirectory, event, state); err != nil {
-			return responseForError(mode, "workspace_state_failed", err.Error())
-		}
-		return Response{}
-	}
+func processPre(event Event, toolName, root string, mode Mode) Response {
 	if toolName != "apply_patch" && toolName != "edit" && toolName != "write" && toolName != "write_file" && toolName != "file_write" {
 		return Response{}
 	}
@@ -144,44 +127,25 @@ func processPre(event Event, toolName, root string, mode Mode, stateDirectory st
 	if err != nil {
 		return responseForError(mode, "proposal_evaluation_failed", err.Error())
 	}
-	return responseForFindings(mode, findings, false)
+	return responseForFindings(mode, findings)
 }
 
-func processPost(event Event, toolName, root string, mode Mode, stateDirectory string) Response {
-	if toolName != "bash" && toolName != "shell" && toolName != "exec" {
-		return Response{}
-	}
-	state, err := loadState(stateDirectory, event, root)
-	if err != nil {
-		return responseForError(mode, "workspace_state_missing", err.Error())
-	}
-	defer removeState(stateDirectory, event)
-	current, err := captureWorkspace(root)
-	if err != nil {
-		return responseForError(mode, "workspace_capture_failed", err.Error())
-	}
-	findings, err := compareWorkspace(state, current)
-	if err != nil {
-		return responseForError(mode, "workspace_audit_failed", err.Error())
-	}
-	return responseForFindings(mode, findings, true)
-}
-
-func responseForFindings(mode Mode, findings []model.Finding, post bool) Response {
+func responseForFindings(mode Mode, findings []model.Finding) Response {
 	if len(findings) == 0 {
 		return Response{}
 	}
 	reason := formatFindings(findings)
 	if mode == ModeHard {
-		response := Response{Decision: "block", Reason: reason}
-		if post {
-			continueTurn := false
-			response.Continue = &continueTurn
-			response.StopReason = "ban-code-comments found a newly introduced comment after an opaque command"
-		}
-		return response
+		return Response{Decision: "block", Reason: reason}
 	}
-	return Response{SystemMessage: reason + " Use Git history for history, pull-request descriptions for rationale, simplified code or a nearby README for complexity, and Markdown for general documentation."}
+	guidance := reason + " Use Git history for history, pull-request descriptions for rationale, simplified code or a nearby README for complexity, and Markdown for general documentation."
+	return Response{
+		SystemMessage: guidance,
+		HookSpecificOutput: &HookSpecificOutput{
+			HookEventName:     "PreToolUse",
+			AdditionalContext: guidance,
+		},
+	}
 }
 
 func responseForError(mode Mode, code, message string) Response {
@@ -257,28 +221,6 @@ func evaluateChanges(root string, changes []fileChange) ([]model.Finding, error)
 	return findings, nil
 }
 
-func compareWorkspace(before, after workspaceState) ([]model.Finding, error) {
-	paths := make(map[string]bool, len(before.Files)+len(after.Files))
-	for path := range before.Files {
-		paths[path] = true
-	}
-	for path := range after.Files {
-		paths[path] = true
-	}
-	ordered := make([]string, 0, len(paths))
-	for path := range paths {
-		ordered = append(ordered, path)
-	}
-	sort.Strings(ordered)
-	findings := make([]model.Finding, 0)
-	for _, path := range ordered {
-		oldFindings := findingsFor(path, before.Files[path])
-		newFindings := findingsFor(path, after.Files[path])
-		findings = append(findings, newFindingsDifference(oldFindings, newFindings)...)
-	}
-	return findings, nil
-}
-
 func findingsFor(path string, source []byte) []model.Finding {
 	language, ok := languages.Lookup(path)
 	if !ok {
@@ -306,105 +248,6 @@ func newFindingsDifference(before, after []model.Finding) []model.Finding {
 
 func findingKey(finding model.Finding) string {
 	return string(finding.Language) + "\x00" + string(finding.Category) + "\x00" + finding.Text
-}
-
-func captureWorkspace(root string) (workspaceState, error) {
-	state := workspaceState{Root: root, Files: make(map[string][]byte)}
-	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if entry.IsDir() {
-			if path != root && skippedDirectory(entry.Name()) {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if !entry.Type().IsRegular() || entry.Name() == ".ban-code-comments-hook-state.json" {
-			return nil
-		}
-		if _, ok := languages.Lookup(path); !ok {
-			return nil
-		}
-		relative, err := filepath.Rel(root, path)
-		if err != nil {
-			return err
-		}
-		source, err := os.ReadFile(path)
-		if err != nil {
-			return err
-		}
-		state.Files[filepath.ToSlash(relative)] = source
-		return nil
-	})
-	return state, err
-}
-
-func skippedDirectory(name string) bool {
-	switch name {
-	case ".git", ".hg", ".svn", "node_modules", "vendor", "dist", "build", "target", ".build", ".next", "coverage", "tmp", ".cache":
-		return true
-	default:
-		return false
-	}
-}
-
-func statePath(directory string, event Event) string {
-	if directory == "" {
-		directory = filepath.Join(os.TempDir(), "ban-code-comments-hook")
-	}
-	identity := strings.Join([]string{event.SessionID, event.ToolCallID, event.CWD, event.Transcript}, "\x00")
-	digest := sha256.Sum256([]byte(identity))
-	return filepath.Join(directory, hex.EncodeToString(digest[:])+".json")
-}
-
-func saveState(directory string, event Event, state workspaceState) error {
-	path := statePath(directory, event)
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		return err
-	}
-	contents, err := json.Marshal(state)
-	if err != nil {
-		return err
-	}
-	temporary, err := os.CreateTemp(filepath.Dir(path), ".hook-state-*")
-	if err != nil {
-		return err
-	}
-	temporaryPath := temporary.Name()
-	defer os.Remove(temporaryPath)
-	if err := temporary.Chmod(0o600); err != nil {
-		temporary.Close()
-		return err
-	}
-	if _, err := temporary.Write(contents); err != nil {
-		temporary.Close()
-		return err
-	}
-	if err := temporary.Close(); err != nil {
-		return err
-	}
-	return os.Rename(temporaryPath, path)
-}
-
-func loadState(directory string, event Event, root string) (workspaceState, error) {
-	path := statePath(directory, event)
-	contents, err := os.ReadFile(path)
-	if err != nil {
-		return workspaceState{}, err
-	}
-	var state workspaceState
-	if err := json.Unmarshal(contents, &state); err != nil {
-		return workspaceState{}, err
-	}
-	if state.Root != root {
-		return workspaceState{}, fmt.Errorf("workspace state root %q does not match event cwd %q", state.Root, root)
-	}
-	return state, nil
-}
-
-func removeState(directory string, event Event) {
-	_ = os.Remove(statePath(directory, event))
 }
 
 func resolvePath(root, name string) (string, error) {
