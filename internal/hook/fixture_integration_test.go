@@ -16,7 +16,7 @@ import (
 )
 
 func TestCheckedInHookEventsDecode(t *testing.T) {
-	for _, name := range []string{"pre-tool-use.json", "post-tool-use.json"} {
+	for _, name := range []string{"pre-tool-use.json"} {
 		contents, err := os.ReadFile(filepath.Join(hookTestdataRoot(t), "events", name))
 		if err != nil {
 			t.Fatal(err)
@@ -62,7 +62,7 @@ func TestHookProposedFixturesCoverEveryRegisteredLanguage(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				response := Process(Event{CWD: t.TempDir(), EventName: "PreToolUse", ToolName: "write_file", ToolInput: input}, ModeHard, t.TempDir())
+				response := Process(Event{CWD: t.TempDir(), EventName: "PreToolUse", ToolName: "write_file", ToolInput: input}, ModeHard)
 				if fixture.wantFinding && response.Decision != "block" {
 					t.Fatalf("%s response = %#v; scanner = %#v", fixture.name, response, scanner.Scan(filepath.Base(fixture.path), language, source, selectedCategories))
 				}
@@ -85,7 +85,7 @@ func TestHookProposedFixturesCoverNonCodeAndLegacyCases(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		response := Process(Event{CWD: root, EventName: "PreToolUse", ToolName: "write_file", ToolInput: input}, ModeHard, t.TempDir())
+		response := Process(Event{CWD: root, EventName: "PreToolUse", ToolName: "write_file", ToolInput: input}, ModeHard)
 		if response.Decision != "" {
 			t.Fatalf("%s response = %#v", name, response)
 		}
@@ -103,28 +103,9 @@ func TestHookProposedFixturesCoverNonCodeAndLegacyCases(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	response := Process(Event{CWD: root, EventName: "PreToolUse", ToolName: "edit", ToolInput: input}, ModeHard, t.TempDir())
+	response := Process(Event{CWD: root, EventName: "PreToolUse", ToolName: "edit", ToolInput: input}, ModeHard)
 	if response.Decision != "" {
 		t.Fatalf("legacy response = %#v", response)
-	}
-}
-
-func TestOpaquePostAuditCoversCleanWriteAndMissingState(t *testing.T) {
-	root := t.TempDir()
-	stateDirectory := t.TempDir()
-	event := Event{SessionID: "session", TurnID: "turn", ToolCallID: "call", CWD: root, EventName: "PreToolUse", ToolName: "Bash"}
-	if response := Process(event, ModeHard, stateDirectory); response.Decision != "" {
-		t.Fatalf("pre response = %#v", response)
-	}
-	if err := os.WriteFile(filepath.Join(root, "clean.go"), []byte("package clean\nvar value = 1\n"), 0o600); err != nil {
-		t.Fatal(err)
-	}
-	event.EventName = "PostToolUse"
-	if response := Process(event, ModeHard, stateDirectory); response.Decision != "" {
-		t.Fatalf("clean post response = %#v", response)
-	}
-	if response := Process(event, ModeHard, stateDirectory); response.Decision != "block" || !strings.Contains(response.Reason, "workspace_state_missing") {
-		t.Fatalf("missing state response = %#v", response)
 	}
 }
 
@@ -139,7 +120,7 @@ func TestHookEventFixtureRunsThroughJSONProtocol(t *testing.T) {
 	}
 	event.CWD = t.TempDir()
 	var output bytes.Buffer
-	if err := Run(bytes.NewReader(contentsWithEventCWD(t, event)), &output, ModeHard, t.TempDir()); err != nil {
+	if err := Run(bytes.NewReader(contentsWithEventCWD(t, event)), &output, ModeHard); err != nil {
 		t.Fatal(err)
 	}
 	var response Response

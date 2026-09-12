@@ -1,9 +1,0 @@
-{
-  "session_id": "fixture-session",
-  "turn_id": "fixture-turn",
-  "cwd": "/tmp/fixture-workspace",
-  "hook_event_name": "PostToolUse",
-  "tool_name": "Bash",
-  "tool_response": "",
-  "tool_use_id": "fixture-call"
-}

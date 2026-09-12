@@ -58,7 +58,6 @@ func main() {
 
 func runHook(args []string) {
 	mode := hook.ModeHard
-	stateDirectory := ""
 	for index := 0; index < len(args); index++ {
 		switch args[index] {
 		case "--mode":
@@ -73,13 +72,6 @@ func runHook(args []string) {
 			}
 			mode = parsed
 			index++
-		case "--state-dir":
-			if index+1 >= len(args) {
-				fmt.Fprintln(os.Stderr, "missing value for --state-dir")
-				os.Exit(2)
-			}
-			stateDirectory = args[index+1]
-			index++
 		default:
 			if strings.HasPrefix(args[index], "-") {
 				fmt.Fprintf(os.Stderr, "unsupported hook option %q\n", args[index])
@@ -87,7 +79,7 @@ func runHook(args []string) {
 			}
 		}
 	}
-	if err := hook.Run(os.Stdin, os.Stdout, mode, stateDirectory); err != nil {
+	if err := hook.Run(os.Stdin, os.Stdout, mode); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
