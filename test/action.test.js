@@ -54,6 +54,7 @@ test("parses and verifies release checksums", async () => {
   assert.equal(await verifyChecksum(archive, checksums, "archive.tar.gz"), expected);
   await assert.rejects(verifyChecksum(archive, `${"0".repeat(64)}  archive.tar.gz`, "archive.tar.gz"), /checksum mismatch/);
   assert.throws(() => expectedChecksum("not a checksum", "archive.tar.gz"), /checksum entry not found/);
+  assert.throws(() => expectedChecksum(`${"z".repeat(64)}  archive.tar.gz`, "archive.tar.gz"), /checksum entry not found/);
 });
 
 test("finds executables inside wrapped release archives and cache directories", async () => {
@@ -68,23 +69,154 @@ test("finds executables inside wrapped release archives and cache directories", 
   assert.equal(await findExecutable(directory, "ban-code-comments.exe"), windowsExecutable);
 });
 
-test("uses a cached verified executable without downloading again", async () => {
+test("uses a cached verified executable without downloading the archive again", async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "ban-code-comments-cache-test-"));
   const executable = path.join(directory, "ban-code-comments");
+  const archive = path.join(directory, "ban-code-comments_1.0.0_linux_amd64.tar.gz");
+  const checksums = path.join(directory, "checksums.txt");
   await fs.writeFile(executable, "binary");
-  let downloads = 0;
+  await fs.writeFile(archive, "binary");
+  const digest = crypto.createHash("sha256").update("binary").digest("hex");
+  await fs.writeFile(checksums, `${digest}  ${path.basename(archive)}\n`);
+  let archiveDownloads = 0;
   const result = await downloadCLI("1.0.0", {
     target: targetFor("linux", "x64"),
     cache: {
       find: () => directory,
       downloadTool: async () => {
-        downloads += 1;
-        throw new Error("download should not be called on a cache hit");
+        archiveDownloads += 1;
+        return checksums;
+      },
+      extractTar: async (_archivePath, verificationDirectory) => {
+        await fs.writeFile(path.join(verificationDirectory, "ban-code-comments"), "binary");
+        return verificationDirectory;
       },
     },
   });
   assert.equal(result, executable);
-  assert.equal(downloads, 0);
+  assert.equal(archiveDownloads, 1);
+});
+
+test("verifies a cache miss before extraction and caching", async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "ban-code-comments-download-test-"));
+  const archive = path.join(directory, "archive.tar.gz");
+  const checksums = path.join(directory, "checksums.txt");
+  const archiveContents = "verified release archive";
+  const digest = crypto.createHash("sha256").update(archiveContents).digest("hex");
+  await fs.writeFile(archive, archiveContents);
+  await fs.writeFile(checksums, `${digest}  ban-code-comments_1.0.0_linux_amd64.tar.gz\n`);
+  const calls = [];
+  const cachedExecutable = path.join(directory, "cached", "ban-code-comments");
+  const result = await downloadCLI("1.0.0", {
+    target: targetFor("linux", "x64"),
+    cache: {
+      find: () => undefined,
+      downloadTool: async (url) => {
+        calls.push(url.endsWith("checksums.txt") ? "download-checksums" : "download-archive");
+        return url.endsWith("checksums.txt") ? checksums : archive;
+      },
+      extractTar: async () => {
+        calls.push("extract");
+        await fs.writeFile(path.join(directory, "ban-code-comments"), "binary");
+        return directory;
+      },
+      cacheDir: async () => {
+        calls.push("cache");
+        await fs.mkdir(path.dirname(cachedExecutable), { recursive: true });
+        await fs.writeFile(cachedExecutable, "binary");
+        return path.dirname(cachedExecutable);
+      },
+    },
+  });
+  assert.equal(result, cachedExecutable);
+  assert.deepEqual(calls, ["download-archive", "download-checksums", "extract", "cache"]);
+});
+
+test("downloads and discovers the Windows executable", async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "ban-code-comments-windows-download-test-"));
+  const archive = path.join(directory, "archive.zip");
+  const checksums = path.join(directory, "checksums.txt");
+  const archiveContents = "verified Windows release archive";
+  const filename = "ban-code-comments_1.0.0_windows_amd64.zip";
+  const digest = crypto.createHash("sha256").update(archiveContents).digest("hex");
+  await fs.writeFile(archive, archiveContents);
+  await fs.writeFile(checksums, `${digest}  ${filename}\n`);
+  const cachedDirectory = path.join(directory, "cached");
+  const result = await downloadCLI("1.0.0", {
+    target: targetFor("win32", "x64"),
+    cache: {
+      find: () => undefined,
+      downloadTool: async (url) => url.endsWith("checksums.txt") ? checksums : archive,
+      extractZip: async (_archivePath, extractionDirectory) => {
+        const executable = path.join(extractionDirectory, "ban-code-comments_1.0.0_windows_amd64", "ban-code-comments.exe");
+        await fs.mkdir(path.dirname(executable), { recursive: true });
+        await fs.writeFile(executable, "binary");
+        return extractionDirectory;
+      },
+      cacheDir: async () => {
+        const executable = path.join(cachedDirectory, "ban-code-comments_1.0.0_windows_amd64", "ban-code-comments.exe");
+        await fs.mkdir(path.dirname(executable), { recursive: true });
+        await fs.writeFile(executable, "binary");
+        return cachedDirectory;
+      },
+    },
+  });
+  assert.equal(result, path.join(cachedDirectory, "ban-code-comments_1.0.0_windows_amd64", "ban-code-comments.exe"));
+});
+
+test("redownloads when a cached executable differs from its verified archive", async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "ban-code-comments-cache-tamper-test-"));
+  const cachedExecutable = path.join(directory, "ban-code-comments");
+  const cachedArchive = path.join(directory, "ban-code-comments_1.0.0_linux_amd64.tar.gz");
+  const checksums = path.join(directory, "checksums.txt");
+  const freshDirectory = path.join(directory, "fresh");
+  await fs.writeFile(cachedExecutable, "tampered");
+  await fs.writeFile(cachedArchive, "binary");
+  const digest = crypto.createHash("sha256").update("binary").digest("hex");
+  await fs.writeFile(checksums, `${digest}  ${path.basename(cachedArchive)}\n`);
+  const downloads = [];
+  const result = await downloadCLI("1.0.0", {
+    target: targetFor("linux", "x64"),
+    cache: {
+      find: () => directory,
+      downloadTool: async (url) => {
+        downloads.push(url.endsWith("checksums.txt") ? "checksums" : "archive");
+        return url.endsWith("checksums.txt") ? checksums : cachedArchive;
+      },
+      extractTar: async (_archivePath, extractionDirectory) => {
+        await fs.writeFile(path.join(extractionDirectory, "ban-code-comments"), "binary");
+        return extractionDirectory;
+      },
+      cacheDir: async () => {
+        await fs.mkdir(freshDirectory, { recursive: true });
+        await fs.writeFile(path.join(freshDirectory, "ban-code-comments"), "binary");
+        return freshDirectory;
+      },
+    },
+  });
+  assert.equal(result, path.join(freshDirectory, "ban-code-comments"));
+  assert.deepEqual(downloads, ["checksums", "archive", "checksums"]);
+});
+
+test("rejects a mismatched cache miss before extraction", async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), "ban-code-comments-download-failure-test-"));
+  const archive = path.join(directory, "archive.tar.gz");
+  const checksums = path.join(directory, "checksums.txt");
+  await fs.writeFile(archive, "tampered release archive");
+  await fs.writeFile(checksums, `${"0".repeat(64)}  ban-code-comments_1.0.0_linux_amd64.tar.gz\n`);
+  let extracted = false;
+  await assert.rejects(downloadCLI("1.0.0", {
+    target: targetFor("linux", "x64"),
+    cache: {
+      find: () => undefined,
+      downloadTool: async (url) => url.endsWith("checksums.txt") ? checksums : archive,
+      extractTar: async () => {
+        extracted = true;
+        return directory;
+      },
+    },
+  }), /checksum mismatch/);
+  assert.equal(extracted, false);
 });
 
 test("preserves CLI exit statuses", async () => {
@@ -92,4 +224,16 @@ test("preserves CLI exit statuses", async () => {
     const actual = await runCLI(process.execPath, ["-e", `process.exit(${code})`]);
     assert.equal(actual, code);
   }
+});
+
+test("reports subprocess launch failures while returning status 2", async () => {
+  const errors = [];
+  const originalError = console.error;
+  console.error = (...args) => errors.push(args.join(" "));
+  try {
+    assert.equal(await runCLI(path.join(os.tmpdir(), "ban-code-comments-missing-executable"), []), 2);
+  } finally {
+    console.error = originalError;
+  }
+  assert.match(errors.join("\n"), /ENOENT|no such file|not found/);
 });

@@ -23,7 +23,7 @@ main()
     process.exitCode = code;
   })
   .catch((error) => {
-    core.error(error instanceof Error ? error.message : String(error));
+    console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 2;
   });
 

@@ -46,3 +46,35 @@ jobs:
         if: steps.findings.outcome != 'failure'
         shell: bash
         run: exit 1
+      - name: Verify operational failures fail the step
+        id: operational
+        continue-on-error: true
+        uses: ./
+        with:
+          paths: internal/scanner/testdata/fixtures/go/clean
+          format: unsupported
+      - name: Assert operational failure was reported
+        if: steps.operational.outcome != 'failure'
+        shell: bash
+        run: exit 1
+      - name: Verify bundled entrypoint preserves exact finding status
+        shell: bash
+        run: |
+          set +e
+          INPUT_PATHS=internal/scanner/testdata/fixtures/go/finding INPUT_LANGUAGES=go INPUT_FORMAT=text node dist/index.js
+          status=$?
+          set -e
+          test "$status" -eq 1
+      - name: Verify bundled entrypoint preserves exact operational status
+        shell: bash
+        run: |
+          set +e
+          INPUT_PATHS=internal/scanner/testdata/fixtures/go/clean INPUT_FORMAT=unsupported node dist/index.js
+          status=$?
+          set -e
+          test "$status" -eq 2
+      - name: Verify bundled entrypoint emits debug diagnostics
+        shell: bash
+        run: |
+          INPUT_PATHS=README.md INPUT_FORMAT=json INPUT_DEBUG=true node dist/index.js 2>debug.log
+          grep -F "debug: README.md: unsupported file type" debug.log

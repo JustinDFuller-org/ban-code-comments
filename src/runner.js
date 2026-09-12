@@ -9,7 +9,10 @@ function runCLI(executable, args, cwd = process.env.GITHUB_WORKSPACE || process.
       settled = true;
       resolve(typeof code === "number" ? code : 2);
     };
-    child.on("error", () => finish(2));
+    child.on("error", (error) => {
+      console.error(error instanceof Error ? error.message : String(error));
+      finish(2);
+    });
     child.on("close", (code) => finish(code));
   });
 }
