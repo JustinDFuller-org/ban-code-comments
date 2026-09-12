@@ -79,7 +79,6 @@ async function downloadCLI(version, options = {}) {
         const executable = await verifyCachedExecutable(cached, cachedArchive, filename, target, cache, urls);
         if (executable) return executable;
       } catch {
-        // A stale or modified cache entry is discarded by downloading and verifying it again.
       }
     }
   }
