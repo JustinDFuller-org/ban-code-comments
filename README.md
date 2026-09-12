@@ -60,9 +60,19 @@ jobs:
             internal/scanner/testdata/fixtures/**
 ```
 
-Use an exact release such as `@v1.0.0` or a full commit SHA when reproducibility is more important than automatically receiving compatible updates. The moving major tag is maintained to the latest compatible release.
+Use `@v1` to receive compatible releases automatically. For reproducible workflows, pin an exact release such as `@v1.0.0` or pin the Action to a full commit SHA. The moving `v1` tag is maintained to the latest compatible release.
 
-Action inputs are `paths` (newline-separated, default `.`), `languages` (comma- or newline-separated), `categories` (comma-separated), `include` and `exclude` (newline-separated globs), `format` (`json` or `text`, default `json`), and `debug` (`true` or `false`, default `false`). Their behavior matches the direct CLI options.
+The Action accepts the same configuration as the CLI:
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `paths` | `.` | Files or directories to scan; separate multiple values with newlines. |
+| `languages` | — | Languages to scan; separate values with commas or newlines. |
+| `categories` | — | Comment categories to report; separate values with commas. |
+| `include` | — | File globs to include; separate multiple values with newlines. |
+| `exclude` | — | File globs to exclude; separate multiple values with newlines. |
+| `format` | `json` | Output format: `json` or `text`. |
+| `debug` | `false` | Set to `true` to write skipped-file diagnostics to stderr. |
 
 The Action exits `0` for a clean scan, `1` when selected findings exist, and `2` for invalid options or scan failures. Findings and operational errors therefore fail the workflow step while remaining distinguishable in the log.
 
