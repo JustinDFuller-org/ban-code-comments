@@ -55,6 +55,6 @@ Coverage will run from the normal `pull_request` event. The workflow will not us
 2. Migrate all repository-owned URLs and module/import paths to `JustinDFuller-org`.
 3. Run the workflow on `main` and a same-repository pull request to establish hosted native-gate evidence.
 4. Exercise a passing pull request, a deliberately below-threshold pull request, and a fork-style read-only path.
-5. Require the `coverage` status check in the organization repository ruleset after the pilot is accepted.
+5. Optionally require the `coverage` status check in the organization repository ruleset after the pilot is accepted; this requires repository ruleset administration permission.
 
 To roll back, remove the `coverage` status check from the repository ruleset; report generation and artifact retention can remain enabled independently.

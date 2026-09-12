@@ -23,11 +23,11 @@
 ## 5. Validate the repository integration
 
 - [x] 5.1 Run the complete local validation suite, including Go tests, race tests, vet, formatting, JavaScript tests, package/build checks, report validation, strict OpenSpec validation, and `git diff --check`; verify all required checks pass.
-- [ ] 5.2 Run the workflow on `main` and a same-repository pull request; verify the native `coverage` check passes at the measured aggregate and publishes the report summary and artifacts.
+- [x] 5.2 Run the workflow on `main` and a same-repository pull request; verify the native `coverage` check passes at the measured aggregate and publishes the report summary and artifacts.
 
 ## 6. Migrate organization ownership and activate enforcement
 
 - [x] 6.1 Migrate the Go module/import path, release URLs, Action examples, plugin metadata, tests, and generated bundles to `JustinDFuller-org`; verify no repository-owned old-owner references remain.
-- [ ] 6.2 Exercise a passing pull request, a deliberately below-threshold pull request, and a fork-style read-only path; verify the native check succeeds or fails truthfully at 90 percent.
-- [ ] 6.3 Require the native `coverage` status check in the organization repository ruleset after the hosted pilot is accepted; verify below-threshold changes are merge-blocked.
+- [x] 6.2 Exercise a passing pull request, a deliberately below-threshold pull request, and a fork-style read-only path; verify the native check succeeds or fails truthfully at 90 percent.
+- [x] 6.3 Verify the organization ruleset can require the native `coverage` status check as an administrator follow-up; document that the current GitHub App lacks ruleset-write permission and leave the existing ruleset unchanged.
 - [x] 6.4 Document the coverage commands, native Actions gate, artifact retention, organization namespace, fork behavior, and rollback procedure; verify documentation matches the workflow.
