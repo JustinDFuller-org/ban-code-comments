@@ -1,11 +1,14 @@
 package hook
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/JustinDFuller-org/ban-code-comments/internal/model"
 )
 
 func TestHardPreToolUseBlocksNewFindingForEveryTraditionalTool(t *testing.T) {
@@ -128,5 +131,113 @@ func TestWarnJSONProtocolIncludesCompatibilityAndCodexContext(t *testing.T) {
 	hookSpecificOutput, ok := response["hookSpecificOutput"].(map[string]any)
 	if !ok || hookSpecificOutput["additionalContext"] != response["systemMessage"] {
 		t.Fatalf("response = %#v", response)
+	}
+}
+
+func TestParseModeAndProcessBranches(t *testing.T) {
+	if got, err := ParseMode(" WARN "); err != nil || got != ModeWarn {
+		t.Fatalf("ParseMode = %q, %v", got, err)
+	}
+	if _, err := ParseMode("other"); err == nil {
+		t.Fatal("ParseMode accepted unsupported mode")
+	}
+	if response := Process(Event{EventName: "unknown"}, ModeHard); response != (Response{}) {
+		t.Fatalf("unknown event response = %#v", response)
+	}
+	if response := Process(Event{EventName: "PreToolUse"}, Mode("other")); response.SystemMessage == "" || !strings.Contains(response.SystemMessage, "invalid_mode") {
+		t.Fatalf("invalid mode response = %#v", response)
+	}
+}
+
+func TestRunAndResponseFormattingBranches(t *testing.T) {
+	var output bytes.Buffer
+	if err := Run(strings.NewReader("{}"), &output, ModeWarn); err != nil || output.String() != "{}\n" {
+		t.Fatalf("empty event output = %q, err = %v", output.String(), err)
+	}
+	findings := []model.Finding{
+		{Path: "b.go", Range: model.Range{Start: model.Position{Line: 2, Column: 1}}, Category: model.CategoryOrdinary, Text: "// b"},
+		{Path: "a.go", Range: model.Range{Start: model.Position{Line: 1, Column: 3}}, Category: model.CategoryDocumentation, Text: "/// a"},
+	}
+	if got := formatFindings(findings); !strings.Contains(got, "a.go:1:3") || !strings.Contains(got, "b.go:2:1") {
+		t.Fatalf("formatted findings = %q", got)
+	}
+	if response := responseForFindings(ModeHard, findings); response.Decision != "block" || response.Reason == "" {
+		t.Fatalf("hard response = %#v", response)
+	}
+	if response := responseForFindings(ModeWarn, findings); response.SystemMessage == "" || response.Decision != "" || response.HookSpecificOutput == nil {
+		t.Fatalf("warn response = %#v", response)
+	}
+	if response := responseForError(ModeWarn, "code", "message"); response.SystemMessage == "" || response.Decision != "" {
+		t.Fatalf("warn error response = %#v", response)
+	}
+}
+
+func TestReconstructChangesSupportsInputForms(t *testing.T) {
+	cases := []struct {
+		name  string
+		input string
+		check func(*testing.T, []fileChange)
+	}{
+		{"string patch", `"*** Begin Patch\n*** Add File: main.go\n+package main\n*** End Patch\n"`, func(t *testing.T, changes []fileChange) {
+			if len(changes) != 1 || changes[0].Path != "main.go" {
+				t.Fatalf("changes = %#v", changes)
+			}
+		}},
+		{"input patch", `{"input":"*** Begin Patch\n*** Delete File: main.go\n*** End Patch\n"}`, func(t *testing.T, changes []fileChange) {
+			if len(changes) != 1 || !changes[0].Delete {
+				t.Fatalf("changes = %#v", changes)
+			}
+		}},
+		{"content", `{"filePath":"main.go","newContent":"package main\n"}`, func(t *testing.T, changes []fileChange) {
+			if string(changes[0].Source) != "package main\n" {
+				t.Fatalf("changes = %#v", changes)
+			}
+		}},
+		{"replacement", `{"path":"main.go","oldString":"old","newString":"new"}`, func(t *testing.T, changes []fileChange) {
+			if changes[0].OldText != "old" || changes[0].NewText != "new" {
+				t.Fatalf("changes = %#v", changes)
+			}
+		}},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			changes, err := reconstructChanges(json.RawMessage(testCase.input))
+			if err != nil {
+				t.Fatal(err)
+			}
+			testCase.check(t, changes)
+		})
+	}
+	for _, input := range []string{"", "[]", `{}`, `{"path":"main.go"}`, `{"path":"main.go","content":1}`} {
+		if _, err := reconstructChanges(json.RawMessage(input)); err == nil {
+			t.Errorf("reconstructChanges(%q) accepted invalid input", input)
+		}
+	}
+}
+
+func TestPatchAndPathHelpers(t *testing.T) {
+	updated, err := applyUpdatePatch([]byte("one\ntwo\nthree\n"), []string{"@@", " one", "-two", "+changed"})
+	if err != nil || string(updated) != "one\nchanged\nthree\n" {
+		t.Fatalf("updated = %q, err = %v", updated, err)
+	}
+	for _, lines := range [][]string{{"@@", "-missing", "+new"}, {"plain"}, {"@@"}} {
+		if _, err := applyUpdatePatch([]byte("one\n"), lines); err == nil {
+			t.Errorf("applyUpdatePatch(%#v) accepted invalid input", lines)
+		}
+	}
+	root := t.TempDir()
+	if path, err := resolvePath(root, "a/main.go"); err != nil || !strings.HasSuffix(path, "main.go") {
+		t.Fatalf("resolvePath = %q, %v", path, err)
+	}
+	for _, name := range []string{"", "../escape"} {
+		if _, err := resolvePath(root, name); err == nil {
+			t.Errorf("resolvePath accepted %q", name)
+		}
+	}
+	if got := displayPath(root, "nested/main.go"); got != "nested/main.go" {
+		t.Fatalf("displayPath = %q", got)
+	}
+	if !equalLines([]string{"a"}, []string{"a"}) || equalLines([]string{"a"}, []string{"b"}) || equalLines([]string{"a"}, nil) {
+		t.Fatal("equalLines mismatch")
 	}
 }
