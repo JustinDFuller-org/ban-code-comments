@@ -8,8 +8,7 @@ const selected = new Set([CATEGORIES.ORDINARY, CATEGORIES.DOCUMENTATION]);
 
 function operationalResponse(mode, code, message) {
   const reason = `ban-code-comments Claude hook operational error (${code}): ${message}`;
-  if (mode === "hard") return { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason } };
-  return { systemMessage: reason };
+  return { systemMessage: reason, hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: reason } };
 }
 
 function targetPath(root, filePath) {
@@ -102,15 +101,24 @@ export async function evaluateClaudeHook(event, mode = "hard") {
   }
 }
 
+async function decodeInput(input) {
+  if (typeof input === "string") return JSON.parse(input);
+  if (Buffer.isBuffer(input)) return JSON.parse(input.toString("utf8"));
+  if (input && typeof input === "object" && typeof input[Symbol.asyncIterator] === "function") {
+    const chunks = [];
+    for await (const chunk of input) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  }
+  if (input && typeof input === "object" && !Array.isArray(input)) return input;
+  throw new Error("hook input is neither JSON text nor an event object");
+}
+
 export async function runClaudeHook(input, mode = "hard", output = process.stdout) {
   let event;
-  try {
-    event = JSON.parse(input);
-  } catch (error) {
-    output.write(`${JSON.stringify(operationalResponse(mode, "invalid_event", `could not decode hook event: ${error.message}`))}\n`);
-    return 0;
-  }
-  output.write(`${JSON.stringify(await evaluateClaudeHook(event, mode))}\n`);
+  try { event = await decodeInput(input); }
+  catch (error) { output.write(`${JSON.stringify(operationalResponse(mode, "invalid_event", `could not decode hook event: ${error.message}`))}\n`); return 0; }
+  try { output.write(`${JSON.stringify(await evaluateClaudeHook(event, mode))}\n`); }
+  catch (error) { output.write(`${JSON.stringify(operationalResponse(mode, "hook_failure", error.message))}\n`); }
   return 0;
 }
 
