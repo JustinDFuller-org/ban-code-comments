@@ -18,6 +18,6 @@
 
 ## 4. Integration and release readiness
 
-- [ ] 4.1 Integrate Claude validation and bundle checks into the repository’s standard check workflow without changing Codex, CLI, or GitHub Action behavior; verify the complete local check command passes.
+- [x] 4.1 Integrate Claude validation and bundle checks into the repository’s standard check workflow without changing Codex, CLI, or GitHub Action behavior; verify the complete local check command passes.
 - [ ] 4.2 Run the installed Claude CLI validation and local plugin smoke on Claude Code 2.1.216 when available, recording plugin validation, hard-block, warn, and unsupported-path results; verify runtime evidence is distinguished from protocol-only evidence.
 - [ ] 4.3 Verify version coupling, generated artifacts, OpenSpec validation, and release documentation for the new Claude plugins; verify the change is ready for implementation and release review without implementing application code in this proposal.

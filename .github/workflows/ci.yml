@@ -26,11 +26,13 @@ jobs:
         run: npm run coverage
       - name: Validate Codex plugins
         run: npm run validate:plugins
+      - name: Validate Claude plugins
+        run: npm run validate:claude-plugins
       - name: Verify generated distributions
         run: |
           npm run build
           npm run build:plugins
-          git diff --exit-code -- dist plugins/ban-code-comments-hard-block/bin/launcher.js plugins/ban-code-comments-warn/bin/launcher.js licenses.txt
+          git diff --exit-code -- dist plugins/ban-code-comments-hard-block/bin/launcher.js plugins/ban-code-comments-warn/bin/launcher.js plugins/ban-code-comments-claude-hard-block/bin/launcher.js plugins/ban-code-comments-claude-warn/bin/launcher.js licenses.txt
       - name: Ban code comments with the package CLI
         run: node bin/ban-code-comments.js --format text --exclude 'internal/scanner/testdata/fixtures/**' --exclude 'test/fixtures/**' --exclude 'internal/hook/testdata/**' --exclude 'plugins/**' .
       - name: Validate OpenSpec
