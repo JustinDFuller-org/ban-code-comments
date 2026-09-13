@@ -1,7 +1,7 @@
 ## 1. Package foundation and public contracts
 
-- [ ] 1.1 Rename the npm package to `ban-code-comments`, require Node.js 24+, add the `ban-code-comments` bin and package exports, and verify `npm pack --dry-run` contains the intended executable, API modules, and documentation.
-- [ ] 1.2 Define the shared plain-data model, category constants, supported-language registry, aliases, extensions, and special filenames, and verify registry tests cover every existing language and alias.
+- [x] 1.1 Rename the npm package to `ban-code-comments`, require Node.js 24+, add the `ban-code-comments` bin and package exports, and verify `npm pack --dry-run` contains the intended executable, API modules, and documentation.
+- [x] 1.2 Define the shared plain-data model, category constants, supported-language registry, aliases, extensions, and special filenames, and verify registry tests cover every existing language and alias.
 - [ ] 1.3 Implement CLI argument parsing, defaults, validation, injected-stream execution, and exit-status mapping, and verify clean, finding, invalid-option, and scan-error cases return 0, 1, and 2 as specified.
 
 ## 2. JavaScript scanner and discovery
