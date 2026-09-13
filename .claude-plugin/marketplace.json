@@ -1,0 +1,23 @@
+{
+  "name": "ban-code-comments",
+  "owner": {
+    "name": "Justin Fuller"
+  },
+  "description": "Claude Code plugins for enforcing the no-code-comments policy",
+  "plugins": [
+    {
+      "name": "ban-code-comments-claude-hard-block",
+      "source": "./plugins/ban-code-comments-claude-hard-block",
+      "description": "Deny Claude Code edits that introduce supported source comments.",
+      "version": "1.0.2",
+      "category": "Engineering"
+    },
+    {
+      "name": "ban-code-comments-claude-warn",
+      "source": "./plugins/ban-code-comments-claude-warn",
+      "description": "Warn Claude Code when edits introduce supported source comments.",
+      "version": "1.0.2",
+      "category": "Engineering"
+    }
+  ]
+}

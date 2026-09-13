@@ -8,7 +8,7 @@
 
 - [x] 2.1 Add hard-block and warn Claude plugin manifests, hook configurations, bundled guidance skills, and launcher entry points using `${CLAUDE_PLUGIN_ROOT}`; verify each plugin has the required Claude directory structure.
 - [x] 2.2 Extend the plugin build to generate self-contained hard-block and warn Claude launchers without runtime downloads; verify generated bundles execute offline against representative hook JSON.
-- [ ] 2.3 Add `.claude-plugin/marketplace.json` entries for both plugins and document marketplace installation, enablement, rollback, Node.js requirements, and the explicit unsupported-write boundary; verify documentation commands and names match the manifests.
+- [x] 2.3 Add `.claude-plugin/marketplace.json` entries for both plugins and document marketplace installation, enablement, rollback, Node.js requirements, and the explicit unsupported-write boundary; verify documentation commands and names match the manifests.
 
 ## 3. Validation and smoke coverage
 
