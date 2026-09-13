@@ -13,8 +13,8 @@
 ## 3. Validation and smoke coverage
 
 - [x] 3.1 Add structural validation for Claude manifests, marketplace metadata, anchored `Edit|Write` matchers, launcher commands, skills, and absence of unsupported hook events; verify the validator passes for both plugins.
-- [ ] 3.2 Add deterministic protocol tests for hard and warn behavior across Write, Edit, `replace_all`, existing findings, literals, Markdown, malformed input, and unsupported tools; verify `npm test` and coverage remain passing.
-- [ ] 3.3 Add a Claude smoke harness that runs `claude plugin validate`, exercises the bundled launcher, and optionally runs authenticated `claude -p --plugin-dir` scenarios; verify unauthenticated environments report live smoke as unrun rather than passed.
+- [x] 3.2 Add deterministic protocol tests for hard and warn behavior across Write, Edit, `replace_all`, existing findings, literals, Markdown, malformed input, and unsupported tools; verify `npm test` and coverage remain passing.
+- [x] 3.3 Add a Claude smoke harness that runs `claude plugin validate`, exercises the bundled launcher, and optionally runs authenticated `claude -p --plugin-dir` scenarios; verify unauthenticated environments report live smoke as unrun rather than passed.
 
 ## 4. Integration and release readiness
 
