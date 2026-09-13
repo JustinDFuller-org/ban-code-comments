@@ -62,7 +62,8 @@ jobs:
         run: |
           mkdir -p release-artifact
           npm pack --pack-destination release-artifact
-          sha256sum release-artifact/*.tgz > release-artifact/SHA256SUMS
+          cd release-artifact
+          sha256sum *.tgz > SHA256SUMS
       - name: Upload validated package
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:

@@ -34,6 +34,7 @@ test("release workflow separates validation from trusted staged publishing", () 
   assert.match(workflow, /actions\/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c/);
   assert.match(workflow, /name: release-package/);
   assert.match(workflow, /path: release-artifact/);
+  assert.match(workflow, /cd release-artifact\n          sha256sum \*\.tgz > SHA256SUMS/);
   assert.match(workflow, /sha256sum -c SHA256SUMS/);
   assert.match(workflow, /find release-artifact -name '\*\.tgz'/);
   assert.doesNotMatch(workflow, /contents: write/);
