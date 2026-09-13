@@ -61,8 +61,10 @@ function reconstruct(raw) {
   const patchKeys = ["patch", "input", "command"].filter((key) => Object.hasOwn(raw, key));
   const contentKeys = ["content", "new_content", "newContent"].filter((key) => Object.hasOwn(raw, key));
   const pathKeys = ["path", "file_path", "filePath", "filename"].filter((key) => Object.hasOwn(raw, key));
+  const editKeys = ["old_string", "oldString", "new_string", "newString"].filter((key) => Object.hasOwn(raw, key));
   if (patchKeys.length > 1 || contentKeys.length > 1 || pathKeys.length > 1) throw new Error("tool input contains duplicate field aliases");
-  if (patchKeys.length > 0 && (contentKeys.length > 0 || pathKeys.length > 0)) throw new Error("tool input contains conflicting proposal fields");
+  if (patchKeys.length > 0 && (contentKeys.length > 0 || pathKeys.length > 0 || editKeys.length > 0)) throw new Error("tool input contains conflicting proposal fields");
+  if (contentKeys.length > 0 && editKeys.length > 0) throw new Error("tool input contains conflicting proposal fields");
   const patch = stringValue(raw, "patch", "input", "command");
   if (patch.trimStart().startsWith("*** Begin Patch")) return parsePatch(patch);
   const filePath = stringValue(raw, "path", "file_path", "filePath", "filename");
