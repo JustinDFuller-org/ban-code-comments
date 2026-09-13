@@ -32,10 +32,12 @@
     "build:plugins": "node scripts/build-plugins.mjs",
     "version": "node scripts/sync-version.mjs && npm run build && npm run build:plugins",
     "smoke:codex": "node scripts/codex-smoke.mjs",
+    "validate:claude-plugins": "node scripts/validate-claude-plugins.mjs",
     "validate:plugins": "node scripts/validate-plugins.mjs",
     "test": "node --test test/*.test.js",
+    "smoke:claude": "node scripts/claude-smoke.mjs",
     "coverage": "c8 --all --include=src/**/*.js --exclude=src/../dist/** --reporter=text --reporter=cobertura --check-coverage --lines=90 node --test test/*.test.js",
-    "check": "npm test && npm run validate:plugins && npm run build && git diff --exit-code -- dist licenses.txt"
+    "check": "npm test && npm run validate:plugins && npm run validate:claude-plugins && npm run build && npm run build:plugins && git diff --exit-code -- dist plugins/ban-code-comments-hard-block/bin/launcher.js plugins/ban-code-comments-warn/bin/launcher.js plugins/ban-code-comments-claude-hard-block/bin/launcher.js plugins/ban-code-comments-claude-warn/bin/launcher.js licenses.txt"
   },
   "dependencies": {
     "@actions/core": "3.0.1"

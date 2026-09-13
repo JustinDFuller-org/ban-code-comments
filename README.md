@@ -110,6 +110,22 @@ Pre-tool evaluation reconstructs documented file-edit payloads from `apply_patch
 
 The guidance skill directs agents to use Git history, pull-request descriptions, simplified code, nearby README files, and Markdown instead of explanatory source comments. The plugin bundles are self-contained and work offline after installation. Roll back by disabling or removing the plugin with `codex plugin remove <plugin>@ban-code-comments`.
 
+## Claude Code plugins
+
+This repository provides two separately installable Claude Code plugins: `ban-code-comments-claude-warn` allows supported `Edit` and `Write` calls and adds model-visible guidance, while `ban-code-comments-claude-hard-block` denies supported calls that introduce findings.
+
+Review plugin source and hook commands before trusting them, then add the repository marketplace and install one variant:
+
+```sh
+claude plugin marketplace add JustinDFuller-org/ban-code-comments
+claude plugin install ban-code-comments-claude-warn@ban-code-comments
+claude plugin enable ban-code-comments-claude-warn@ban-code-comments
+```
+
+Use `ban-code-comments-claude-hard-block@ban-code-comments` instead when denial is preferred. Roll back with `claude plugin disable <plugin>@ban-code-comments` or `claude plugin uninstall <plugin>@ban-code-comments`. The plugins require Node.js 24 or newer for their bundled launchers.
+
+Claude pre-tool evaluation covers only `PreToolUse` `Edit` and `Write` events. Bash, PowerShell, MCP, NotebookEdit, generators, redirection, and other opaque writes remain outside the plugin boundary; the repository scanner and GitHub Action enforce their final state in CI. Markdown, README files, literals, directives, and unsupported paths remain outside the comment finding policy.
+
 ## Development
 
 Run the complete local checks with Node.js 24 or newer:
@@ -125,7 +141,7 @@ npm run build:plugins
 
 ## Coverage policy
 
-CI runs the Node test suite, enforces at least 90 percent aggregate JavaScript line coverage, validates both Codex plugins, rebuilds generated distributions, runs the package CLI, and validates OpenSpec.
+CI runs the Node test suite, enforces at least 90 percent aggregate JavaScript line coverage, validates both Codex and Claude Code plugin variants, rebuilds generated distributions, runs the package CLI, and validates OpenSpec.
 
 ## Releases
 

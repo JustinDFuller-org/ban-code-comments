@@ -7,3 +7,4 @@ export { discover } from "./discovery.js";
 export { check } from "./check.js";
 export { runCLI } from "./cli-runner.js";
 export { evaluateHook, runHook } from "./hook.js";
+export { evaluateClaudeHook, runClaudeHook } from "./claude-hook.js";
