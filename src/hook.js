@@ -61,9 +61,15 @@ function reconstruct(raw) {
   const filePath = stringValue(raw, "path", "file_path", "filePath", "filename");
   if (!filePath) throw new Error("tool input does not identify a file");
   for (const key of ["content", "new_content", "newContent"]) if (typeof raw[key] === "string") return [{ path: filePath, source: raw[key] }];
+  const hasOldText = Object.hasOwn(raw, "old_string") || Object.hasOwn(raw, "oldString");
   const oldText = stringValue(raw, "old_string", "oldString");
   const newText = stringValue(raw, "new_string", "newString");
-  if (Object.hasOwn(raw, "old_string") || Object.hasOwn(raw, "oldString")) return [{ path: filePath, oldText, newText }];
+  if (hasOldText) {
+    if (typeof raw.old_string !== "string" && typeof raw.oldString !== "string") throw new Error("edit input must include string old_string");
+    if (oldText.length === 0) throw new Error("edit input must include non-empty old_string");
+    if (typeof raw.new_string !== "string" && typeof raw.newString !== "string") throw new Error("edit input must include string new_string");
+    return [{ path: filePath, oldText, newText }];
+  }
   throw new Error("tool input does not contain proposed file content");
 }
 
