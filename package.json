@@ -6,9 +6,7 @@
   "engines": {
     "node": ">=24"
   },
-  "bin": {
-    "ban-code-comments": "./bin/ban-code-comments.js"
-  },
+  "bin": "./bin/ban-code-comments.js",
   "exports": {
     ".": "./src/api.js",
     "./model": "./src/model.js",

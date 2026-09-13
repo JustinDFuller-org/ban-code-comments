@@ -6,17 +6,20 @@ on:
       - 'v*'
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 concurrency:
   group: release-publication
   cancel-in-progress: false
 
 jobs:
-  npm:
+  publish:
     if: contains(github.ref_name, '.')
     runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Checkout tagged source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -27,7 +30,7 @@ jobs:
         with:
           node-version: 24.x
           registry-url: https://registry.npmjs.org
-          cache: npm
+          package-manager-cache: false
       - name: Validate semantic version tag
         env:
           RELEASE_TAG: ${{ github.ref_name }}
@@ -36,6 +39,10 @@ jobs:
             echo "unsupported release tag: $RELEASE_TAG" >&2
             exit 1
           fi
+      - name: Validate release commit
+        run: |
+          git fetch origin main --quiet
+          test "$GITHUB_SHA" = "$(git rev-parse origin/main)"
       - name: Install package dependencies
         run: npm ci
       - name: Validate package and integrations
@@ -52,9 +59,18 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
       - name: Publish package
-        run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+  update-major-tag:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout tagged source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
       - name: Update major Action tag
         env:
           RELEASE_TAG: ${{ github.ref_name }}
