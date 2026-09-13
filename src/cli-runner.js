@@ -9,7 +9,7 @@ export async function runCLI(args = [], streams = {}) {
     const options = parseArgs(args);
     if (options.help) { output.write("Usage: ban-code-comments [options] [path ...]\n"); return 0; }
     if (options.version) { output.write("1.0.1\n"); return 0; }
-    const value = await check(options.paths, { ...options, onDiagnostic: options.debug ? (item) => errors.write(`debug: ${item.path}: ${item.reason}\n`) : undefined });
+    const value = await check(options.paths, { ...options, cwd: streams.cwd, onDiagnostic: options.debug ? (item) => errors.write(`debug: ${item.path}: ${item.reason}\n`) : undefined });
     output.write(options.format === "text" ? renderText(value) : renderJSON(value));
     if (options.debug) errors.write(`scanned ${value.summary.files_scanned} source(s), skipped ${value.summary.files_skipped} path(s)\n`);
     return exitStatus(value.findings);

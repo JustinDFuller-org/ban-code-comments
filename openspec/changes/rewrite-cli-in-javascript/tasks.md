@@ -19,9 +19,9 @@
 
 ## 4. Integration replacement
 
-- [ ] 4.1 Replace the GitHub Action downloader/runner path with direct calls to the shared JavaScript CLI while preserving Action input parsing, stream routing, workspace selection, and exit statuses, and verify Action unit tests cover defaults, configured inputs, findings, and operational failures.
-- [ ] 4.2 Replace both Codex plugin launchers with self-contained bundles of the shared JavaScript hook entrypoint, preserve their metadata, matcher scope, and guidance skills, and verify plugin validation and offline hard/warn smoke cases.
-- [ ] 4.3 Rebuild `dist` and plugin launcher artifacts from source and verify generated outputs are reproducible and contain no Go executable downloader, checksum, archive, or platform-cache dependency.
+- [x] 4.1 Replace the GitHub Action downloader/runner path with direct calls to the shared JavaScript CLI while preserving Action input parsing, stream routing, workspace selection, and exit statuses, and verify Action unit tests cover defaults, configured inputs, findings, and operational failures.
+- [x] 4.2 Replace both Codex plugin launchers with self-contained bundles of the shared JavaScript hook entrypoint, preserve their metadata, matcher scope, and guidance skills, and verify plugin validation and offline hard/warn smoke cases.
+- [x] 4.3 Rebuild `dist` and plugin launcher artifacts from source and verify generated outputs are reproducible and contain no Go executable downloader, checksum, archive, or platform-cache dependency.
 
 ## 5. CI, release, and documentation
 

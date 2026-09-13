@@ -261,20 +261,19 @@ test("serializes concurrent plugin cache writes", async () => {
   assert.equal(await fs.readFile(path.join(destinations[0], "ban-code-comments"), "utf8"), "binary");
 });
 
-test("reports invalid hook launcher modes and runs the configured executable", async () => {
+test("reports invalid hook launcher modes", async () => {
   assert.equal(await hookMain("invalid"), 0);
-  assert.equal(await runHook("warn", { executable: process.execPath }), 1);
 });
 
-test("maps action inputs through the executable runner", async () => {
+test("maps action inputs through the shared CLI runner", async () => {
   const calls = [];
   const code = await actionMain({
     core: { getInput: (name) => ({ paths: "src", format: "text" }[name] || "") },
-    download: async (version) => { calls.push(["download", version]); return "/tmp/ban-code-comments"; },
     run: async (...args) => { calls.push(["run", ...args]); return 0; },
   });
   assert.equal(code, 0);
-  assert.deepEqual(calls, [["download", "1.0.1"], ["run", "/tmp/ban-code-comments", ["--format", "text", "src"]]]);
+  assert.equal(calls[0][0], "run");
+  assert.deepEqual(calls[0][1], ["--format", "text", "src"]);
 });
 
 test("runs the hook launcher entrypoint without downloading for invalid input", async () => {
