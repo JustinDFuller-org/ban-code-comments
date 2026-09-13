@@ -64,7 +64,7 @@ jobs:
             internal/scanner/testdata/fixtures/**
 ```
 
-Use `@v1` to receive compatible releases automatically. For reproducible workflows, pin an exact release such as `@v1.0.0` or pin the Action to a full commit SHA. The moving `v1` tag is maintained to the latest compatible release.
+Use `@v1` to receive compatible releases automatically. For reproducible workflows, pin an exact release such as `@v1.0.0` or pin the Action to a full commit SHA. An authorized maintainer advances the protected `v1` tag to the latest compatible release.
 
 The Action accepts the same configuration as the CLI:
 
