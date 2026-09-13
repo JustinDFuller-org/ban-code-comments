@@ -14,5 +14,5 @@
 
 - [x] 3.1 Document the tag, GitHub environment approval, and npm staged-package approval sequence, including npm 2FA, rejection, retry, and the separate manual floating Action tag promotion.
 - [x] 3.2 Update release workflow tests for automatic tag triggering, validation-before-approval, immutable artifact handoff, staged publishing, least-privilege permissions, invalid or stale tags, and absence of floating-tag mutation; verify the focused tests pass.
-- [ ] 3.3 Run repository checks, strict OpenSpec validation, workflow/documentation validation, and `git diff --check`; verify the change contains planning artifacts only and no implementation edits.
+- [x] 3.3 Run repository checks, strict OpenSpec validation, workflow/documentation validation, and `git diff --check`; verify the implementation diff is limited to the release workflow, release documentation, focused tests, and task tracking.
 - [ ] 3.4 Execute one hosted release verification with a new protected semantic tag, confirming automatic start, environment pause, staged package creation, npm-side review availability, and no public publication before npm approval.
