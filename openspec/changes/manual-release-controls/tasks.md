@@ -13,10 +13,10 @@
 
 ## 3. Governance and verification
 
-- [ ] 3.1 Verify the `npm-publish` environment remains restricted to `v*.*.*` tags and requires `JustinDFuller` approval; record the live environment policy and reviewer result.
+- [x] 3.1 Verify the `npm-publish` environment remains restricted to `v*.*.*` tags and requires `JustinDFuller` approval; record the live environment policy and reviewer result.
 - [ ] 3.2 Verify npm trusted-publisher configuration identifies this repository, `release.yml`, and the `npm-publish` environment; record the live publisher configuration result without exposing credentials.
-- [ ] 3.3 Verify the active tag ruleset protects semantic and floating tags against unauthorized creation, update, deletion, and non-fast-forward changes; record the live ruleset result.
-- [ ] 3.4 Add or update workflow/documentation validation for valid tags, stale tags, mismatched versions, denied approvals, and absence of automatic floating-tag mutation; verify the validation passes on the proposal diff.
+- [x] 3.3 Verify the active tag ruleset protects semantic and floating tags against unauthorized creation, update, deletion, and non-fast-forward changes; record the live ruleset result.
+- [x] 3.4 Add or update workflow/documentation validation for valid tags, stale tags, mismatched versions, denied approvals, and absence of automatic floating-tag mutation; verify the validation passes on the proposal diff.
 
 ## 4. Final verification
 
