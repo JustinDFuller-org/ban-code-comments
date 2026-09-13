@@ -137,11 +137,27 @@ function heredocEnd(source, index, marker, stripTabs = false) {
 function skipShellHeredocs(source, index) {
   const line = source.slice(index, lineEnd(source, index));
   const markers = [];
-  for (const match of line.matchAll(/<<(-?)([^\s;|&<>]+)/g)) {
-    let marker = match[2];
-    if ((marker.startsWith("'") && marker.endsWith("'")) || (marker.startsWith('"') && marker.endsWith('"'))) marker = marker.slice(1, -1);
-    marker = marker.replaceAll("\\", "");
-    if (marker) markers.push({ marker, stripTabs: match[1] === "-" });
+  for (let cursor = 0; cursor < line.length; cursor += 1) {
+    if (line[cursor] === "\\") { cursor += 1; continue; }
+    if (line[cursor] === "'" || line[cursor] === '"') {
+      const quote = line[cursor]; cursor += 1;
+      while (cursor < line.length && line[cursor] !== quote) { if (line[cursor] === "\\" && quote === '"') cursor += 1; cursor += 1; }
+      continue;
+    }
+    if (!line.startsWith("<<", cursor)) continue;
+    cursor += 2;
+    const stripTabs = line[cursor] === "-";
+    if (stripTabs) cursor += 1;
+    while (/\s/.test(line[cursor] || "")) cursor += 1;
+    let marker = "";
+    if (line[cursor] === "'" || line[cursor] === '"') {
+      const quote = line[cursor++];
+      while (cursor < line.length && line[cursor] !== quote) marker += line[cursor++];
+      cursor += 1;
+    } else {
+      while (cursor < line.length && !/[\s;|&<>]/.test(line[cursor])) marker += line[cursor++];
+    }
+    if (marker) markers.push({ marker: marker.replaceAll("\\", ""), stripTabs });
   }
   if (!markers.length) return null;
   let cursor = index;
@@ -186,7 +202,17 @@ export function scanSource(source, filePath = "<text>", language, categories = n
   while (index < source.length) {
     if (lineStart(source, index)) {
       if (language === "shell") { const end = skipShellHeredocs(source, index); if (end !== null) { index = end; continue; } }
-      if (language === "yaml") { const end = skipYamlBlock(source, index); if (end !== null) { index = end; continue; } }
+      if (language === "yaml") {
+        const end = skipYamlBlock(source, index);
+        if (end !== null) {
+          const currentEnd = lineEnd(source, index);
+          const indicator = source.slice(index, currentEnd);
+          const comment = indicator.indexOf("#");
+          if (comment >= 0) addFinding(findings, source, filePath, language, index + comment, currentEnd, categories);
+          index = end;
+          continue;
+        }
+      }
       if (language === "ruby" && source.startsWith("=begin", index)) { const end = source.indexOf("\n=end", index + 6); addFinding(findings, source, filePath, language, index, end < 0 ? source.length : end + 6, categories); index = end < 0 ? source.length : end + 6; continue; }
     }
     if (language === "php") { const end = skipPhpHeredoc(source, index); if (end !== null) { index = end; continue; } }
@@ -202,7 +228,7 @@ export function scanSource(source, filePath = "<text>", language, categories = n
     for (const marker of spec.line || []) if (source.startsWith(marker, index)) {
       const previous = source[index - 1];
       if ((language === "shell" || language === "yaml") && marker === "#" && previous && !/[\s;]/.test(previous)) continue;
-      if (language === "sql" && marker === "#" && [">", "<", "-"].includes(previous)) continue;
+      if (language === "sql" && marker === "#" && ([">", "<", "-"].includes(previous) || [">", "<"].includes(source[index + 1]))) continue;
       const newline = source.slice(index).search(/[\r\n]/);
       addFinding(findings, source, filePath, language, index, newline < 0 ? source.length : index + newline, categories);
       index = newline < 0 ? source.length : index + newline; matched = true; break;

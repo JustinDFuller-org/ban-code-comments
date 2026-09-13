@@ -28,9 +28,23 @@ test("scanner ignores adversarial literal and heredoc comment-shaped text", () =
     ["csharp raw", "csharp", String.raw`var value = """"text // literal""""; // actual`, 1],
     ["swift extended", "swift", String.raw`let value = #"text " // literal"#`, 0],
     ["shell heredoc", "shell", "cat <<'EOF'\n# literal\nEOF\necho value # actual\n", 1],
+    ["shell inline heredoc", "shell", "printf x; cat <<'EOF'\n# literal\nEOF\necho value # actual\n", 1],
+    ["shell escaped heredoc marker", "shell", "cat <<\\EOF\n# literal\nEOF\necho value # actual\n", 1],
+    ["shell quoted heredoc text", "shell", "echo \"literal <<EOF\"\necho value # actual\n", 1],
     ["shell multiple heredoc", "shell", "cat <<A <<B\n# A\nA\n# B\nB\n", 0],
+    ["shell hyphenated heredoc", "shell", "cat <<END-OF-FILE\n# literal\nEND-OF-FILE\necho ok # real\n", 1],
+    ["shell hash in word", "shell", "echo foo#bar\n", 0],
+    ["shell escaped hash", "shell", "echo value \\# literal\n", 0],
     ["yaml block", "yaml", "message: |\n  # literal\nnext: value\n", 0],
+    ["yaml plain scalar", "yaml", "value: plain#scalar\n", 0],
+    ["yaml indicator", "yaml", "message: | # actual\n  # literal\n", 1],
     ["php heredoc", "php", "<?php\n$value = <<<TXT\n// literal\nTXT;\n$actual = 1; // actual\n", 1],
+    ["php heredoc text", "php", "<?php\n$value = \"<<<TXT\";\n$actual = 1; // actual\n", 1],
+    ["php block heredoc text", "php", "/* <<<TXT\nTXT */\n$actual = 1; // actual\n", 2],
+    ["php heredoc after block", "php", "<?php\n/* header */ $value = <<<TXT\n// literal\nTXT;\n$actual = 1; // actual\n", 2],
+    ["sql hash operator", "sql", "SELECT data #> '{a}' FROM table_name;\n", 0],
+    ["escaped template", "javascript", "const value = `text \\` // literal`;\n", 0],
+    ["crlf", "go", "value := 1 // comment\r\n", 1],
   ];
   for (const [name, language, source, count] of cases) assert.equal(scanSource(source, "fixture", language, selected).length, count, name);
 });
