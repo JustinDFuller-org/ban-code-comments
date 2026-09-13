@@ -73,9 +73,10 @@ test("Codex hook runner reads stdin streams before evaluating events", async () 
 
 test("hook reconstruction and path helpers reject malformed or unsafe proposals", () => {
   assert.equal(parsePatch("*** Begin Patch\n*** Delete File: main.go\n*** End Patch\n")[0].delete, true);
+  assert.throws(() => parsePatch("*** Begin Patch\n*** Add File: main.go\n+// finding\n"), /end marker/);
   assert.equal(reconstruct({ filePath: "main.go", newContent: "package main\n" })[0].source, "package main\n");
   assert.deepEqual(reconstruct({ path: "main.go", oldString: "old", newString: "new" })[0], { path: "main.go", oldText: "old", newText: "new" });
-  for (const input of [undefined, [], {}, { path: "main.go" }, { path: "main.go", content: 1 }, { path: "main.go", old_string: "", new_string: "// finding" }, { path: "main.go", old_string: 1, new_string: "new" }, { path: "main.go", old_string: "old", new_string: 1 }, { path: "main.go", old_string: 1, oldString: "old", new_string: "new" }, { path: "main.go", old_string: "old", new_string: "new", newString: "new" }]) assert.throws(() => reconstruct(input));
+  for (const input of [undefined, [], {}, { path: "main.go" }, { path: "main.go", content: 1 }, { path: "main.go", old_string: "", new_string: "// finding" }, { path: "main.go", old_string: 1, new_string: "new" }, { path: "main.go", old_string: "old", new_string: 1 }, { path: "main.go", old_string: 1, oldString: "old", new_string: "new" }, { path: "main.go", old_string: "old", new_string: "new", newString: "new" }, { content: "new", newContent: "new" }, { path: "main.go", file_path: "other.go", content: "new" }, { patch: "*** End Patch\n", content: "new" }]) assert.throws(() => reconstruct(input));
   const root = "/tmp/ban-code-comments-hook-root";
   assert.match(resolve(root, "a/main.go"), /main\.go$/);
   assert.throws(() => resolve(root, "../escape"), /escapes workspace/);

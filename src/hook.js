@@ -27,7 +27,9 @@ function stringValue(input, ...keys) { for (const key of keys) if (typeof input?
 
 function parsePatch(patch) {
   const lines = String(patch).replaceAll("\r\n", "\n").split("\n");
-  let index = lines[0]?.trim() === "*** Begin Patch" ? 1 : 0;
+  const wrapped = lines[0]?.trim() === "*** Begin Patch";
+  if (wrapped && !lines.some((line) => line.trim() === "*** End Patch")) throw new Error("patch is missing end marker");
+  let index = wrapped ? 1 : 0;
   const changes = [];
   while (index < lines.length) {
     const line = lines[index];
@@ -56,6 +58,11 @@ function reconstruct(raw) {
   if (raw === undefined || raw === null) throw new Error("hook event has no tool input");
   if (typeof raw === "string") return parsePatch(raw);
   if (typeof raw !== "object" || Array.isArray(raw)) throw new Error("tool input is not an object");
+  const patchKeys = ["patch", "input", "command"].filter((key) => Object.hasOwn(raw, key));
+  const contentKeys = ["content", "new_content", "newContent"].filter((key) => Object.hasOwn(raw, key));
+  const pathKeys = ["path", "file_path", "filePath", "filename"].filter((key) => Object.hasOwn(raw, key));
+  if (patchKeys.length > 1 || contentKeys.length > 1 || pathKeys.length > 1) throw new Error("tool input contains duplicate field aliases");
+  if (patchKeys.length > 0 && (contentKeys.length > 0 || pathKeys.length > 0)) throw new Error("tool input contains conflicting proposal fields");
   const patch = stringValue(raw, "patch", "input", "command");
   if (patch.trimStart().startsWith("*** Begin Patch")) return parsePatch(patch);
   const filePath = stringValue(raw, "path", "file_path", "filePath", "filename");
