@@ -1,6 +1,6 @@
 {
   "name": "ban-code-comments-claude-hard-block",
-  "version": "1.0.2",
+  "version": "1.0.5",
   "description": "Deny Claude Code edits that introduce supported source comments.",
   "author": {
     "name": "Justin Fuller"
