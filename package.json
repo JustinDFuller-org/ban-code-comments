@@ -1,22 +1,39 @@
 {
-  "name": "ban-code-comments-action",
+  "name": "ban-code-comments",
   "version": "1.0.1",
-  "private": true,
   "type": "module",
-  "description": "GitHub Action wrapper for ban-code-comments",
-  "main": "dist/index.js",
+  "description": "Detect and ban code comments across source and configuration files",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "ban-code-comments": "./bin/ban-code-comments.js"
+  },
+  "exports": {
+    ".": "./src/api.js",
+    "./model": "./src/model.js",
+    "./languages": "./src/languages.js",
+    "./cli": "./src/cli.js",
+    "./hook": "./src/hook.js"
+  },
+  "main": "src/api.js",
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "ncc build src/index.js --minify --source-map --license licenses.txt -o dist",
     "build:plugins": "node scripts/build-plugins.mjs",
     "smoke:codex": "node scripts/codex-smoke.mjs",
     "validate:plugins": "node scripts/validate-plugins.mjs",
     "test": "node --test test/*.test.js",
-    "coverage": "c8 --all --include=src/**/*.js --exclude=src/../dist/** --reporter=text --reporter=cobertura node --test test/*.test.js",
+    "coverage": "c8 --all --include=src/**/*.js --exclude=src/../dist/** --reporter=text --reporter=cobertura --check-coverage --lines=90 node --test test/*.test.js",
     "check": "npm test && npm run validate:plugins && npm run build && git diff --exit-code -- dist licenses.txt"
   },
   "dependencies": {
-    "@actions/core": "3.0.1",
-    "@actions/tool-cache": "4.0.0"
+    "@actions/core": "3.0.1"
   },
   "devDependencies": {
     "@vercel/ncc": "0.45.0",

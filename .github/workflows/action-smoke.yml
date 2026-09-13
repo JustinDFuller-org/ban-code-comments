@@ -24,11 +24,11 @@ jobs:
       - name: Checkout published Action release
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
-          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.release-tag }}
+          ref: ${{ github.event_name == 'release' && github.event.release.tag_name || github.sha }}
       - name: Verify clean scan
         uses: ./
         with:
-          paths: internal/scanner/testdata/fixtures/go/clean
+          paths: test/fixtures/go/clean
           languages: go
           format: json
           debug: 'true'
@@ -37,10 +37,10 @@ jobs:
         continue-on-error: true
         uses: ./
         with:
-          paths: internal/scanner/testdata/fixtures/go/finding
+          paths: test/fixtures/go/finding
           languages: go
-          include: internal/scanner/testdata/fixtures/go/**
-          exclude: internal/scanner/testdata/fixtures/go/clean/**
+          include: test/fixtures/go/**
+          exclude: test/fixtures/go/clean/**
           format: text
       - name: Assert findings were reported
         if: steps.findings.outcome != 'failure'
@@ -51,7 +51,7 @@ jobs:
         continue-on-error: true
         uses: ./
         with:
-          paths: internal/scanner/testdata/fixtures/go/clean
+          paths: test/fixtures/go/clean
           format: unsupported
       - name: Assert operational failure was reported
         if: steps.operational.outcome != 'failure'
@@ -61,7 +61,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          INPUT_PATHS=internal/scanner/testdata/fixtures/go/finding INPUT_LANGUAGES=go INPUT_FORMAT=text node dist/index.js
+          INPUT_PATHS=test/fixtures/go/finding INPUT_LANGUAGES=go INPUT_FORMAT=text node dist/index.js
           status=$?
           set -e
           test "$status" -eq 1
@@ -69,7 +69,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          INPUT_PATHS=internal/scanner/testdata/fixtures/go/clean INPUT_FORMAT=unsupported node dist/index.js
+          INPUT_PATHS=test/fixtures/go/clean INPUT_FORMAT=unsupported node dist/index.js
           status=$?
           set -e
           test "$status" -eq 2
@@ -77,4 +77,4 @@ jobs:
         shell: bash
         run: |
           INPUT_PATHS=README.md INPUT_FORMAT=json INPUT_DEBUG=true node dist/index.js 2>debug.log
-          grep -F "debug: README.md: unsupported file type" debug.log
+          grep -F "debug: README.md: unsupported file" debug.log

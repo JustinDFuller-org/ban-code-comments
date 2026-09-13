@@ -1,15 +1,12 @@
 import * as core from "@actions/core";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { CLI_VERSION } from "./version.js";
-import { downloadCLI } from "./downloader.js";
 import { cliArguments } from "./inputs.js";
-import { runCLI } from "./runner.js";
+import { runCLI } from "./cli-runner.js";
 
 async function main(dependencies = {}) {
   const coreAPI = dependencies.core || core;
-  const download = dependencies.download || downloadCLI;
-  const execute = dependencies.run || runCLI;
+  const execute = dependencies.run || ((args, options) => runCLI(args, options));
   const inputs = {
     paths: coreAPI.getInput("paths"),
     languages: coreAPI.getInput("languages"),
@@ -19,8 +16,7 @@ async function main(dependencies = {}) {
     format: coreAPI.getInput("format") || "json",
     debug: coreAPI.getInput("debug") || "false",
   };
-  const executable = await download(CLI_VERSION);
-  return execute(executable, cliArguments(inputs));
+  return execute(cliArguments(inputs), { cwd: process.env.GITHUB_WORKSPACE || process.cwd() });
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

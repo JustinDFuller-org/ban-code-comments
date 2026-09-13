@@ -1,12 +1,16 @@
 # ban-code-comments
 
-`ban-code-comments` detects code comments so teams can enforce a no-comments policy locally and in CI. It is a standalone Go binary with no language runtime or repository configuration file required.
+`ban-code-comments` detects code comments so teams can enforce a no-comments policy locally and in CI. It is a self-contained Node.js package with no repository configuration file required.
 
 ## Install
 
-Download the archive for your platform from the [GitHub Releases](https://github.com/JustinDFuller-org/ban-code-comments/releases) page, verify it with `checksums.txt`, and place `ban-code-comments` on your `PATH`. Releases include macOS arm64/amd64, Linux arm64/amd64, and Windows amd64 binaries.
+Install the published package with Node.js 24 or newer:
 
-For local development, run `go install github.com/JustinDFuller-org/ban-code-comments/cmd/ban-code-comments@latest`.
+```sh
+npm install --global ban-code-comments
+```
+
+The package includes the `ban-code-comments` executable and the programmatic API. It does not require Go, a native executable, or a runtime download.
 
 ## Usage
 
@@ -36,7 +40,7 @@ The scanner ignores comment-shaped text inside strings, raw strings, templates, 
 
 ## GitHub Actions
 
-The Action requires a checkout step and runs with read-only repository access. It downloads the exact CLI version coupled to the Action release, verifies the published checksum, caches the runner-specific binary, and preserves the CLI's report and exit status.
+The Action requires a checkout step and runs with read-only repository access. Its release contains the matching JavaScript implementation, so it does not download or cache a native CLI at runtime.
 
 ```yaml
 name: Ban code comments
@@ -76,7 +80,18 @@ The Action accepts the same configuration as the CLI:
 
 The Action exits `0` for a clean scan, `1` when selected findings exist, and `2` for invalid options or scan failures. Findings and operational errors therefore fail the workflow step while remaining distinguishable in the log.
 
-For direct automation outside GitHub Actions, install the released binary and run `ban-code-comments .` as a step. This repository dogfoods the current source tree in CI with `go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' --exclude 'internal/hook/testdata/**' --exclude 'plugins/**' .`; the exclusions keep intentional fixtures and generated plugin bundles separate from production code. Claude hooks can invoke the same command against the changed repository or file paths.
+For direct automation outside GitHub Actions, install the npm package and run `ban-code-comments .` as a step. The CLI and Action use the same implementation, options, reports, and exit statuses.
+
+The package also exposes plain-data operations:
+
+```js
+import { check, scanSource } from "ban-code-comments";
+
+const sourceFindings = scanSource("const value = 1; // finding\n", "fixture.js", "javascript");
+const repositoryResult = await check(["."], { categories: new Set(["ordinary", "documentation"]) });
+```
+
+The API exports `scanSource`, `discover`, `check`, `runCLI`, `evaluateHook`, `renderJSON`, `renderText`, `lookup`, and the shared model and category helpers.
 
 ## Codex plugins
 
@@ -93,35 +108,23 @@ Use `ban-code-comments-hard-block@ban-code-comments` instead when denial is pref
 
 Pre-tool evaluation reconstructs documented file-edit payloads from `apply_patch`, `edit`, `write`, `write_file`, and `file_write`, then compares proposed findings with the file's existing findings, so unchanged legacy comments do not block unrelated edits. Bash, shell, exec, MCP, generators, redirection, and other opaque write paths are outside the plugin boundary; the repository scanner and GitHub Action enforce the final state in CI.
 
-The guidance skill directs agents to use Git history, pull-request descriptions, simplified code, nearby README files, and Markdown instead of explanatory source comments. Roll back by disabling or removing the plugin with `codex plugin remove <plugin>@ban-code-comments`; the existing CLI, GitHub Action, and repository files are unchanged.
+The guidance skill directs agents to use Git history, pull-request descriptions, simplified code, nearby README files, and Markdown instead of explanatory source comments. The plugin bundles are self-contained and work offline after installation. Roll back by disabling or removing the plugin with `codex plugin remove <plugin>@ban-code-comments`.
 
 ## Development
 
-Run the complete local checks with:
+Run the complete local checks with Node.js 24 or newer:
 
 ```sh
-gofmt -w .
-go test ./...
-go vet ./...
 npm ci
 npm test
 npm run coverage
+npm run validate:plugins
+npm run build
+npm run build:plugins
 ```
 
 ## Coverage policy
 
-CI measures all Go production packages and JavaScript files under `src/` using the existing test suites, converts both reports to Cobertura XML, stores them as a short-retention artifact, and runs a native `coverage` check.
+CI runs the Node test suite, enforces at least 90 percent aggregate JavaScript line coverage, validates both Codex plugins, rebuilds generated distributions, runs the package CLI, and validates OpenSpec.
 
-Run the reports locally with `go test ./... -coverprofile=coverage/go.out && go run github.com/boumenot/gocover-cobertura@v1.5.0 < coverage/go.out > coverage/go-cobertura.xml` and `npm run coverage`; the Go report must remain at or above 90 percent aggregate line coverage before the repository rule is activated.
-
-The native `coverage` check computes weighted aggregate line coverage across both reports and fails below 90 percent. The organization repository can require that check through its normal status-check ruleset after hosted validation.
-
-The repository policy uses one weighted aggregate line-coverage threshold across Go and JavaScript with a minimum of 90 percent. Reports remain available in the Actions artifact for seven days.
-
-Fork pull requests run the same test, report-generation, artifact, and native coverage jobs with read-only permissions; no privileged candidate workflow or Code Quality upload is needed.
-
-To roll back enforcement, remove the `coverage` status check from the organization repository ruleset; report generation and artifact retention can remain enabled independently.
-
-The isolated Codex smoke harness reports `unsupported` unless given a built hook CLI and explicit authenticated-test opt-in: `BAN_CODE_COMMENTS_EXECUTABLE=/path/to/ban-code-comments CODEX_SMOKE_REUSE_AUTH=1 npm run smoke:codex`. It uses a temporary Codex home and repository and reports live hook cases separately from unsupported coverage.
-
-Semantic-version tags matching `vMAJOR.MINOR.PATCH` publish cross-platform archives and checksums through GoReleaser.
+Semantic-version tags matching `vMAJOR.MINOR.PATCH` publish the corresponding npm package version. The repository tag and Action major tag remain release references; the Action and plugins use the bundled JavaScript implementation coupled to that release.
