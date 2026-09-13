@@ -20,5 +20,5 @@
 
 ## 4. Final verification
 
-- [ ] 4.1 Run repository checks, strict OpenSpec validation, YAML/workflow validation, and `git diff --check`; verify all required checks pass.
-- [ ] 4.2 Confirm the proposal layer contains only planning artifacts and no implementation changes before handing it to review; verify the diff contains only `openspec/changes/manual-release-controls/**`.
+- [x] 4.1 Run repository checks, strict OpenSpec validation, YAML/workflow validation, and `git diff --check`; verify all required checks pass.
+- [x] 4.2 Confirm the proposal layer contains only planning artifacts and no implementation changes before handing it to review; verify the diff contains only `openspec/changes/manual-release-controls/**`.
