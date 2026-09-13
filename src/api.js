@@ -6,3 +6,4 @@ export { renderJSON, renderText } from "./report.js";
 export { discover } from "./discovery.js";
 export { check } from "./check.js";
 export { runCLI } from "./cli-runner.js";
+export { evaluateHook, runHook } from "./hook.js";
