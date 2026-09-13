@@ -51,12 +51,14 @@ async function walk(directory, cwd, options, diagnostics) {
 }
 
 async function tracked(cwd) {
-  const { stdout } = await execFileAsync("git", ["-C", cwd, "ls-files", "--cached", "--others", "--exclude-standard", "-z"], { encoding: "utf8" });
-  return stdout.split("\0").filter(Boolean).map((file) => path.resolve(cwd, file));
+  const { stdout: rootOutput } = await execFileAsync("git", ["-C", cwd, "rev-parse", "--show-toplevel"], { encoding: "utf8" });
+  const repositoryRoot = path.resolve(rootOutput.trim());
+  const { stdout } = await execFileAsync("git", ["-C", repositoryRoot, "ls-files", "--cached", "--others", "--exclude-standard", "-z"], { encoding: "utf8" });
+  return stdout.split("\0").filter(Boolean).map((file) => path.resolve(repositoryRoot, file));
 }
 
 export async function discover(inputPaths = [], options = {}) {
-  const cwd = path.resolve(options.cwd || process.cwd());
+  const cwd = await fs.realpath(path.resolve(options.cwd || process.cwd()));
   const diagnostics = [];
   const candidates = [];
   const paths = inputPaths.length ? inputPaths : null;

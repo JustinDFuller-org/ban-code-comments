@@ -30,3 +30,10 @@ test("CLI runner maps invalid options and unreadable paths to status 2", async (
   assert.equal(await runCLI(["/tmp/ban-code-comments-no-such-path"], missing), 2);
   assert.match(missing.value.stderr, /no such file|ENOENT/i);
 });
+
+test("CLI debug output includes skipped paths and reasons", async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "ban-code-comments-cli-"));
+  const value = streams();
+  assert.equal(await runCLI(["--debug", "--exclude", "test/fixtures/**", "test"], value), 0);
+  assert.match(value.value.stderr, /test\/fixtures\/.*: excluded/);
+});

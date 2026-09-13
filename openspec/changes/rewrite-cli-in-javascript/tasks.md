@@ -8,7 +8,7 @@
 
 - [ ] 2.1 Port the lexical scanner families, comment classification, source ranges, and literal/state handling to JavaScript, and verify unit tests cover every existing scanner family and adversarial case.
 - [x] 2.2 Move the checked-in language fixtures into the Node test layout and verify finding, clean, and false-positive fixtures cover every supported language and extension mapping.
-- [ ] 2.3 Port repository-aware discovery, Git root handling, `.gitignore` checks, fixed directory exclusions, symlink behavior, language filters, include/exclude glob precedence, deduplication, and debug diagnostics, and verify discovery integration tests cover each branch.
+- [x] 2.3 Port repository-aware discovery, Git root handling, `.gitignore` checks, fixed directory exclusions, symlink behavior, language filters, include/exclude glob precedence, deduplication, and debug diagnostics, and verify discovery integration tests cover each branch.
 - [x] 2.4 Implement JSON and text reporting from the shared result model, and verify output field names, ordering, ranges, text, summaries, newline behavior, and writer failures.
 
 ## 3. Codex hook core and differential parity

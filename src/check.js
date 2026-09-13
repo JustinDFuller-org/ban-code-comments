@@ -5,6 +5,7 @@ import { scanSource } from "./scanner.js";
 
 export async function check(inputPaths = [], options = {}) {
   const discovered = await discover(inputPaths, options);
+  if (options.onDiagnostic) for (const diagnostic of discovered.diagnostics) options.onDiagnostic(diagnostic);
   const findings = [];
   for (const candidate of discovered.candidates) {
     let source;
