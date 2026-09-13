@@ -50,17 +50,132 @@ function skipQuoted(source, index, quote) {
   return source.length;
 }
 
+function skipDelimited(source, index, opener, closer, nested = false) {
+  let depth = 1;
+  for (let cursor = index + opener.length; cursor < source.length;) {
+    if (nested && source.startsWith(opener, cursor)) { depth += 1; cursor += opener.length; continue; }
+    if (source.startsWith(closer, cursor)) { depth -= 1; cursor += closer.length; if (depth === 0) return cursor; continue; }
+    cursor += 1;
+  }
+  return source.length;
+}
+
+function skipRawString(source, index, language) {
+  if (language === "cpp" && source[index] === "R" && source[index + 1] === '"') {
+    const open = source.indexOf("(", index + 2);
+    if (open >= 0 && open - index <= 16) {
+      const delimiter = source.slice(index + 2, open);
+      if (!/[\s()\\]/.test(delimiter)) {
+        const close = source.indexOf(`)${delimiter}"`, open + 1);
+        return close < 0 ? source.length : close + delimiter.length + 2;
+      }
+    }
+  }
+  if (language !== "rust" || !/[rR]/.test(source[index] || "")) return null;
+  const match = source.slice(index).match(/^[rR](#+)"/);
+  if (!match) return null;
+  const close = source.indexOf(`"${match[1]}`, index + match[0].length);
+  return close < 0 ? source.length : close + match[1].length + 1;
+}
+
+function skipHashString(source, index, language) {
+  if (language !== "swift" || source[index] !== "#") return null;
+  const hashes = source.slice(index).match(/^#+(?=")/)?.[0];
+  if (!hashes) return null;
+  const opening = `${hashes}"`;
+  const close = source.indexOf(`"${hashes}`, index + opening.length);
+  return close < 0 ? source.length : close + hashes.length + 1;
+}
+
+function skipCSharpRawString(source, index, language) {
+  if (language !== "csharp" || source[index] !== '"') return null;
+  const opening = source.slice(index).match(/^"{3,}/)?.[0];
+  if (!opening) return null;
+  const close = source.slice(index + opening.length).match(/"+/g);
+  if (!close) return source.length;
+  let cursor = index + opening.length;
+  for (const run of close) {
+    cursor = source.indexOf(run, cursor);
+    if (run.length >= opening.length) return cursor + run.length;
+    cursor += run.length;
+  }
+  return source.length;
+}
+
 function stringAt(source, index, language) {
+  const raw = skipRawString(source, index, language) ?? skipHashString(source, index, language) ?? skipCSharpRawString(source, index, language);
+  if (raw !== null) return raw;
   for (const quote of ["'''", '"""']) if (source.startsWith(quote, index)) return skipQuoted(source, index, quote);
   if (language === "csharp" && (source.startsWith('@"', index) || source.startsWith('$@"', index) || source.startsWith('@$"', index))) return skipQuoted(source, index + (source[index] === "$" ? 2 : 1), '"');
-  if (language === "rust" && /r#+"/.test(source.slice(index, index + 12))) {
-    const match = source.slice(index).match(/^r(#+)"/); if (match) { const close = `"${match[1]}`; const end = source.indexOf(close, index + match[0].length); return end < 0 ? source.length : end + close.length; }
-  }
   if (language === "javascript" || language === "typescript") {
     if (source[index] === "`" || source[index] === '"' || source[index] === "'") return skipQuoted(source, index, source[index]);
   }
   if (source[index] === '"' || source[index] === "'") return skipQuoted(source, index, source[index]);
   return null;
+}
+
+function lineEnd(source, index) {
+  const end = source.slice(index).search(/[\r\n]/);
+  return end < 0 ? source.length : index + end;
+}
+
+function lineStart(source, index) { return index === 0 || source[index - 1] === "\n" || source[index - 1] === "\r"; }
+
+function heredocEnd(source, index, marker, stripTabs = false) {
+  let cursor = lineEnd(source, index);
+  while (cursor < source.length) {
+    cursor += 1;
+    const end = lineEnd(source, cursor);
+    let value = source.slice(cursor, end).replace(/\r$/, "");
+    if (stripTabs) value = value.replace(/^\t+/, "");
+    if (value === marker) return end < source.length ? end + 1 : end;
+    cursor = end;
+  }
+  return source.length;
+}
+
+function skipShellHeredocs(source, index) {
+  const line = source.slice(index, lineEnd(source, index));
+  const markers = [];
+  for (const match of line.matchAll(/<<(-?)([^\s;|&<>]+)/g)) {
+    let marker = match[2];
+    if ((marker.startsWith("'") && marker.endsWith("'")) || (marker.startsWith('"') && marker.endsWith('"'))) marker = marker.slice(1, -1);
+    marker = marker.replaceAll("\\", "");
+    if (marker) markers.push({ marker, stripTabs: match[1] === "-" });
+  }
+  if (!markers.length) return null;
+  let cursor = index;
+  for (const item of markers) cursor = heredocEnd(source, cursor, item.marker, item.stripTabs);
+  return cursor;
+}
+
+function skipYamlBlock(source, index) {
+  const line = source.slice(index, lineEnd(source, index));
+  if (!/[:]\s*[|>][-+]?\s*(?:#.*)?$/.test(line)) return null;
+  const indent = (line.match(/^ */) || [""])[0].length;
+  let cursor = lineEnd(source, index);
+  while (cursor < source.length) {
+    cursor += 1;
+    const end = lineEnd(source, cursor);
+    const candidate = source.slice(cursor, end);
+    if (candidate.trim() && (candidate.match(/^ */) || [""])[0].length <= indent) return cursor;
+    cursor = end;
+  }
+  return source.length;
+}
+
+function skipPhpHeredoc(source, index) {
+  const match = source.slice(index).match(/^<<<\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1/);
+  if (!match) return null;
+  let cursor = lineEnd(source, index);
+  while (cursor < source.length) {
+    cursor += 1;
+    const end = lineEnd(source, cursor);
+    const value = source.slice(cursor, end).trim().replace(/;$/, "");
+    if (value === match[2]) return end < source.length ? end + 1 : end;
+    cursor = end;
+  }
+  return source.length;
 }
 
 export function scanSource(source, filePath = "<text>", language, categories = new Set([CATEGORIES.ORDINARY, CATEGORIES.DOCUMENTATION])) {
@@ -69,13 +184,19 @@ export function scanSource(source, filePath = "<text>", language, categories = n
   const findings = [];
   let index = 0;
   while (index < source.length) {
+    if (lineStart(source, index)) {
+      if (language === "shell") { const end = skipShellHeredocs(source, index); if (end !== null) { index = end; continue; } }
+      if (language === "yaml") { const end = skipYamlBlock(source, index); if (end !== null) { index = end; continue; } }
+      if (language === "ruby" && source.startsWith("=begin", index)) { const end = source.indexOf("\n=end", index + 6); addFinding(findings, source, filePath, language, index, end < 0 ? source.length : end + 6, categories); index = end < 0 ? source.length : end + 6; continue; }
+    }
+    if (language === "php") { const end = skipPhpHeredoc(source, index); if (end !== null) { index = end; continue; } }
     const stringEnd = stringAt(source, index, language);
     if (stringEnd !== null) { index = stringEnd; continue; }
     let matched = false;
     for (const [start, endMarker] of spec.block || []) if (source.startsWith(start, index)) {
-      const end = source.indexOf(endMarker, index + start.length);
-      addFinding(findings, source, filePath, language, index, end < 0 ? source.length : end + endMarker.length, categories);
-      index = end < 0 ? source.length : end + endMarker.length; matched = true; break;
+      const end = skipDelimited(source, index, start, endMarker, language === "rust");
+      addFinding(findings, source, filePath, language, index, end, categories);
+      index = end; matched = true; break;
     }
     if (matched) continue;
     for (const marker of spec.line || []) if (source.startsWith(marker, index)) {

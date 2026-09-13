@@ -56,7 +56,7 @@ jobs:
           test -s dist/index.js
           test -s dist/index.js.map
       - name: Ban code comments with the local CLI
-        run: go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' --exclude 'internal/hook/testdata/**' --exclude 'plugins/**' .
+        run: go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' --exclude 'test/fixtures/**' --exclude 'internal/hook/testdata/**' --exclude 'plugins/**' .
       - name: Explain unsupported Codex write paths
         run: echo 'The Codex plugins enforce traditional PreToolUse file writes; Bash, MCP, generators, redirection, and other opaque writes are covered by this final-state CI scan.'
       - name: Run static analysis

@@ -1,0 +1,1 @@
+body::before { content: "https://example.test/* literal */"; }
