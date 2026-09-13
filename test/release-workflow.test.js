@@ -37,6 +37,7 @@ test("release workflow separates validation from trusted staged publishing", () 
   assert.match(workflow, /cd release-artifact\n          sha256sum \*\.tgz > SHA256SUMS/);
   assert.match(workflow, /sha256sum -c SHA256SUMS/);
   assert.match(workflow, /find release-artifact -name '\*\.tgz'/);
+  assert.match(workflow, /npm stage publish "\.\/\$\(find release-artifact/);
   assert.doesNotMatch(workflow, /contents: write/);
   assert.doesNotMatch(workflow, /NPM_TOKEN|NODE_AUTH_TOKEN/);
   assert.doesNotMatch(workflow, /npm publish --access public/);
