@@ -39,6 +39,9 @@ for (const plugin of plugins) {
   }
   const passed = plugin.mode === "hard" ? response.hookSpecificOutput?.permissionDecision === "deny" : response.hookSpecificOutput?.permissionDecision === undefined && typeof response.hookSpecificOutput?.additionalContext === "string";
   observation(`${plugin.name}-launcher`, passed ? "passed" : "failed", JSON.stringify(response));
+  const unsupported = JSON.stringify({ cwd: smokeRoot, hook_event_name: "PreToolUse", tool_name: "Bash", tool_input: { command: "printf unsupported" } });
+  const unsupportedResult = spawnSync("node", [path.join(pluginRoot, "bin", "launcher.js"), "--mode", plugin.mode], { cwd: root, input: `${unsupported}\n`, encoding: "utf8", timeout: 120000 });
+  observation(`${plugin.name}-unsupported-path`, unsupportedResult.status === 0 && unsupportedResult.stdout.trim() === "{}" ? "passed" : "failed", `${unsupportedResult.stdout || ""}${unsupportedResult.stderr || ""}`.trim());
 }
 
 if (process.env.CLAUDE_SMOKE_LIVE !== "1") {
