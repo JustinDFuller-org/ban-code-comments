@@ -7,24 +7,27 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 concurrency:
   group: release-publication
   cancel-in-progress: false
 
 jobs:
-  goreleaser:
+  npm:
     if: contains(github.ref_name, '.')
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout tagged source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-      - name: Set up Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          go-version: '1.26.0'
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          cache: npm
       - name: Validate semantic version tag
         env:
           RELEASE_TAG: ${{ github.ref_name }}
@@ -33,23 +36,25 @@ jobs:
             echo "unsupported release tag: $RELEASE_TAG" >&2
             exit 1
           fi
-      - name: Install Action dependencies
+      - name: Install package dependencies
         run: npm ci
-      - name: Build bundled Action distribution
-        run: npm run build
-      - name: Verify bundled Action distribution
-        run: git diff --exit-code -- dist
-      - name: Validate Action and CLI release version
+      - name: Validate package and integrations
+        run: |
+          npm test
+          npm run coverage
+          npm run validate:plugins
+          npm run build
+          npm run build:plugins
+          git diff --exit-code -- dist plugins/ban-code-comments-hard-block/bin/launcher.js plugins/ban-code-comments-warn/bin/launcher.js licenses.txt
+          node scripts/check-release-version.mjs
+          npm pack --dry-run
+          test "$(node bin/ban-code-comments.js --version)" = "${RELEASE_TAG#v}"
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-        run: node scripts/check-release-version.mjs
-      - name: Release
-        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
-        with:
-          version: v2.18.1
-          args: release --clean
+      - name: Publish package
+        run: npm publish --access public --provenance
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Update major Action tag
         env:
           RELEASE_TAG: ${{ github.ref_name }}

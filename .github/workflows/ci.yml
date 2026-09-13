@@ -13,79 +13,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Set up Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          go-version: '1.26.0'
-      - name: Check formatting
-        run: test -z "$(gofmt -l .)"
-      - name: Run tests
-        run: |
-          mkdir -p coverage
-          go test ./... -coverprofile=coverage/go.out
-      - name: Convert Go coverage report
-        run: |
-          mkdir -p coverage
-          go run github.com/boumenot/gocover-cobertura@v1.5.0 < coverage/go.out > coverage/go-cobertura.xml
-      - name: Install Action dependencies
+          node-version: 24.x
+          cache: npm
+      - name: Install package dependencies
         run: npm ci
-      - name: Test Action package
+      - name: Run Node test suite
         run: npm test
-      - name: Generate JavaScript coverage report
+      - name: Enforce JavaScript coverage
         run: npm run coverage
-      - name: Validate coverage report scope
-        run: |
-          test -s coverage/go-cobertura.xml
-          test -s coverage/cobertura-coverage.xml
-          ! grep -E '(_test\\.go|/test/|/dist/|/plugins/|/fixtures/|/coverage/)' coverage/go-cobertura.xml
-          ! grep -E '(^|/)(test|dist|plugins|coverage)/' coverage/cobertura-coverage.xml
-          grep -q 'filename="internal/' coverage/go-cobertura.xml
-          grep -q 'filename="src/' coverage/cobertura-coverage.xml
-      - name: Upload coverage reports as an artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: coverage-reports
-          path: |
-            coverage/go-cobertura.xml
-            coverage/cobertura-coverage.xml
-          if-no-files-found: error
-          retention-days: 7
-      - name: Check bundled Action distribution
+      - name: Validate Codex plugins
+        run: npm run validate:plugins
+      - name: Verify generated distributions
         run: |
           npm run build
-          test -s dist/index.js
-          test -s dist/index.js.map
-      - name: Ban code comments with the local CLI
-        run: go run ./cmd/ban-code-comments --format text --exclude 'internal/scanner/testdata/fixtures/**' --exclude 'test/fixtures/**' --exclude 'internal/hook/testdata/**' --exclude 'plugins/**' .
-      - name: Explain unsupported Codex write paths
-        run: echo 'The Codex plugins enforce traditional PreToolUse file writes; Bash, MCP, generators, redirection, and other opaque writes are covered by this final-state CI scan.'
-      - name: Run static analysis
-        run: go vet ./...
+          npm run build:plugins
+          git diff --exit-code -- dist plugins/ban-code-comments-hard-block/bin/launcher.js plugins/ban-code-comments-warn/bin/launcher.js licenses.txt
+      - name: Ban code comments with the package CLI
+        run: node bin/ban-code-comments.js --format text --exclude 'internal/scanner/testdata/fixtures/**' --exclude 'test/fixtures/**' --exclude 'internal/hook/testdata/**' --exclude 'plugins/**' .
       - name: Validate OpenSpec
         run: npx --yes @fission-ai/openspec@1.13.0 validate --changes --strict
-      - name: Validate GoReleaser
-        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
-        with:
-          version: v2.18.1
-          args: check
-      - name: Build release snapshot
-        uses: goreleaser/goreleaser-action@f06c13b6b1a9625abc9e6e439d9c05a8f2190e94
-        with:
-          version: v2.18.1
-          args: release --snapshot --clean --skip=publish
-
-  coverage:
-    needs: test
-    if: ${{ needs.test.result == 'success' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Download coverage reports
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: coverage-reports
-      - name: Enforce aggregate line coverage
-        run: node scripts/check-coverage.mjs go-cobertura.xml cobertura-coverage.xml --minimum 90
