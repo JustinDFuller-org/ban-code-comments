@@ -17,7 +17,7 @@ The Action SHALL run the JavaScript `ban-code-comments` implementation bundled w
 
 #### Scenario: Unsupported runner is rejected
 
-- **WHEN** the Action runs on an operating-system and architecture combination unsupported by Node.js 24 or the package
+- **WHEN** the Action runs on an operating-system or architecture unsupported by Node.js 24 or the package
 - **THEN** the Action reports an actionable operational error and exits unsuccessfully without attempting a scan
 
 #### Scenario: Bundled distribution integrity fails
@@ -37,7 +37,7 @@ The Action SHALL expose inputs corresponding to the CLI's paths, languages, cate
 #### Scenario: Configured filters reach the CLI
 
 - **WHEN** a repository supplies paths, languages, categories, include globs, exclude globs, format, or debug inputs
-- **THEN** the Action passes the equivalent values to the CLI without shell expansion or loss of spaces and glob characters
+- **THEN** the Action passes the equivalent values to the shared JavaScript implementation without shell expansion or loss of spaces and glob characters
 
 #### Scenario: Invalid configuration is rejected by the CLI contract
 
@@ -46,7 +46,7 @@ The Action SHALL expose inputs corresponding to the CLI's paths, languages, cate
 
 ### Requirement: Preserve CLI reports and enforcement statuses
 
-The Action SHALL stream the CLI's standard output and standard error to the workflow log and SHALL preserve its exit status: `0` for a clean scan, `1` when selected findings exist, and `2` for invalid options or scan failures. The Action SHALL not add a separate configuration file, finding policy, or alternate report format.
+The Action SHALL stream the shared CLI's standard output and standard error to the workflow log and SHALL preserve its exit status: `0` for a clean scan, `1` when selected findings exist, and `2` for invalid options or scan failures. The Action SHALL not add a separate configuration file, finding policy, or alternate report format.
 
 #### Scenario: Clean scan passes
 
@@ -65,7 +65,7 @@ The Action SHALL stream the CLI's standard output and standard error to the work
 
 ### Requirement: Provide a permission-minimal and documented integration
 
-The Action SHALL require no GitHub token, repository write permission, or runtime network access. Documentation SHALL show the required checkout step, Action invocation with a release reference, every supported input, Node.js 24 runner requirements, exit behavior, npm package usage, and guidance for immutable commit-SHA pinning.
+The Action SHALL require no GitHub token or repository write permission and SHALL not require network access at runtime to obtain the scanner. Documentation SHALL show the required checkout step, Action invocation with a release reference, every supported input, Node.js 24 runner requirements, exit behavior, npm package usage, and guidance for immutable commit-SHA pinning.
 
 #### Scenario: Checked-out repository is scanned without write access
 

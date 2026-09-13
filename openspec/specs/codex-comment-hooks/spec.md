@@ -32,7 +32,7 @@ The plugins SHALL inspect reconstructible Codex `PreToolUse` file-edit events fr
 
 ### Requirement: Preserve non-code and unsupported write behavior
 
-The plugins SHALL not deny or warn on writes to Markdown, README files, unsupported file types, or paths that do not introduce a finding recognized by the existing scanner. They SHALL not register enforcement hooks for Bash, shell, exec, MCP, or other unsupported tools. Read-only tool calls and unrelated commands SHALL continue without policy output.
+The plugins SHALL not deny or warn on writes to Markdown, README files, unsupported file types, or paths that do not introduce a finding recognized by the shared JavaScript scanner. They SHALL not register enforcement hooks for Bash, shell, exec, MCP, or other unsupported tools. Read-only tool calls and unrelated commands SHALL continue without policy output.
 
 #### Scenario: Markdown documentation remains writable
 
@@ -67,6 +67,11 @@ The project SHALL provide separately installable hard-block and warn-mode Codex 
 
 - **WHEN** a plugin receives a supported hook event without network access
 - **THEN** it evaluates the event using its bundled JavaScript implementation
+
+#### Scenario: CLI bootstrap integrity fails
+
+- **WHEN** the installed plugin bundle is incomplete or fails package integrity validation
+- **THEN** it refuses to execute the hook evaluator and reports an actionable hook failure
 
 ### Requirement: Explain compliant alternatives through a skill
 
