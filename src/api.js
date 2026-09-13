@@ -3,3 +3,6 @@ export { extensions, languageAliases, lookup, parseSelection, supported } from "
 export { exitStatus, parseArgs } from "./cli.js";
 export { scanSource } from "./scanner.js";
 export { renderJSON, renderText } from "./report.js";
+export { discover } from "./discovery.js";
+export { check } from "./check.js";
+export { runCLI } from "./cli-runner.js";
