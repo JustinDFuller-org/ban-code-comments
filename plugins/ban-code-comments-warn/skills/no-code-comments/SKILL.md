@@ -10,3 +10,5 @@ Code comments are prohibited by the supported `ban-code-comments` scanner policy
 Do not add comments that merely restate readable code. String literals, raw strings, templates, escaped literals, heredocs, triple-quoted literals, Markdown, README files, and unsupported file types remain valid documentation paths when they are appropriate.
 
 The warn plugin allows a traditional file edit but adds concise model-visible guidance when it detects a newly introduced finding. Bash, shell, exec, MCP, generators, redirection, and other opaque writes are enforced by the repository scanner and GitHub Action in CI. Review the finding, remove the comment, or move the information to an approved documentation alternative.
+
+Operational hook failures allow the edit with a diagnostic; finding guidance remains visible.

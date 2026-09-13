@@ -9,7 +9,7 @@ const selected = new Set([CATEGORIES.ORDINARY, CATEGORIES.DOCUMENTATION]);
 
 function errorResponse(mode, code, message) {
   const text = `ban-code-comments hook operational error (${code}): ${message}`;
-  return mode === "hard" ? { decision: "block", reason: text } : { systemMessage: text };
+  return { systemMessage: text, hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: text } };
 }
 
 function resolve(root, name) {
@@ -134,15 +134,27 @@ export async function evaluateHook(event, mode = "hard") {
   const eventName = String(event?.hook_event_name || "").trim().toLowerCase().replaceAll("_", "");
   const toolName = String(event?.tool_name || "").trim().toLowerCase();
   if (eventName !== "pretooluse" || !tools.has(toolName)) return {};
-  const root = path.resolve(event.cwd || process.cwd());
-  try { return findingResponse(mode, await evaluate(root, reconstruct(event.tool_input))); }
+  try { return findingResponse(mode, await evaluate(path.resolve(event.cwd || process.cwd()), reconstruct(event.tool_input))); }
   catch (error) { return errorResponse(mode, "proposal_unreadable", error.message); }
+}
+
+async function decodeInput(input) {
+  if (typeof input === "string") return JSON.parse(input);
+  if (Buffer.isBuffer(input)) return JSON.parse(input.toString("utf8"));
+  if (input && typeof input === "object" && typeof input[Symbol.asyncIterator] === "function") {
+    const chunks = [];
+    for await (const chunk of input) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  }
+  if (input && typeof input === "object" && !Array.isArray(input)) return input;
+  throw new Error("hook input is neither JSON text nor an event object");
 }
 
 export async function runHook(input, mode = "hard", output = process.stdout) {
   let event;
-  try { event = JSON.parse(input); } catch (error) { output.write(`${JSON.stringify(errorResponse(mode, "invalid_event", `could not decode hook event: ${error.message}`))}\n`); return 0; }
-  output.write(`${JSON.stringify(await evaluateHook(event, mode))}\n`);
+  try { event = await decodeInput(input); } catch (error) { output.write(`${JSON.stringify(errorResponse(mode, "invalid_event", `could not decode hook event: ${error.message}`))}\n`); return 0; }
+  try { output.write(`${JSON.stringify(await evaluateHook(event, mode))}\n`); }
+  catch (error) { output.write(`${JSON.stringify(errorResponse(mode, "hook_failure", error.message))}\n`); }
   return 0;
 }
 

@@ -61,10 +61,18 @@ test("Claude unsupported events, literals, Markdown, and unsupported files are n
 test("Claude malformed proposals return mode-specific operational responses", async () => {
   const cwd = await mkdtemp(path.join(os.tmpdir(), "ban-code-comments-claude-"));
   const hard = await evaluateClaudeHook(event(cwd, "Edit", { file_path: path.join(cwd, "main.go"), old_string: "missing", new_string: "new" }));
-  assert.equal(hard.hookSpecificOutput.permissionDecision, "deny");
+  assert.equal(hard.hookSpecificOutput.permissionDecision, undefined);
+  assert.match(hard.hookSpecificOutput.additionalContext, /proposal_unreadable/);
   const warn = await evaluateClaudeHook(event(cwd, "Edit", { file_path: path.join(cwd, "main.go"), old_string: "missing", new_string: "new" }), "warn");
   assert.match(warn.systemMessage, /proposal_unreadable/);
   let output = "";
   await runClaudeHook("not json", "hard", { write: (value) => { output += value; } });
-  assert.match(output, /invalid_event/);
+  let response = JSON.parse(output);
+  assert.equal(response.hookSpecificOutput.permissionDecision, undefined);
+  assert.match(response.hookSpecificOutput.additionalContext, /invalid_event/);
+  output = "";
+  await runClaudeHook({}, "invalid", { write: (value) => { output += value; } });
+  response = JSON.parse(output);
+  assert.equal(response.hookSpecificOutput.permissionDecision, undefined);
+  assert.match(response.hookSpecificOutput.additionalContext, /invalid_mode/);
 });

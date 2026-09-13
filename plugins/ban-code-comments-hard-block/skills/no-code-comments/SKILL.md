@@ -10,3 +10,5 @@ Code comments are prohibited by the supported `ban-code-comments` scanner policy
 Do not add comments that merely restate readable code. String literals, raw strings, templates, escaped literals, heredocs, triple-quoted literals, Markdown, README files, and unsupported file types remain valid documentation paths when they are appropriate.
 
 The hard-block plugin can deny reconstructible traditional file edits that introduce findings. Bash, shell, exec, MCP, generators, redirection, and other opaque writes are enforced by the repository scanner and GitHub Action in CI. Review the finding, remove the comment, or move the information to an approved documentation alternative.
+
+Operational hook failures allow the edit with a diagnostic; successfully evaluated findings remain blocked.

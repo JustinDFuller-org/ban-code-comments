@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { Readable } from "node:stream";
 import test from "node:test";
 import { applyPatch, evaluateHook, parsePatch, reconstruct, resolve, runHook } from "../src/hook.js";
 
@@ -44,10 +45,30 @@ test("hook protocol returns mode-specific operational responses", async () => {
   let output = "";
   const stream = { write: (value) => { output += value; } };
   assert.equal(await runHook("not json", "hard", stream), 0);
-  assert.match(output, /invalid_event/);
+  let response = JSON.parse(output);
+  assert.equal(response.decision, undefined);
+  assert.match(response.systemMessage, /invalid_event/);
   output = "";
   await runHook(JSON.stringify({}), "warn", stream);
   assert.equal(output, "{}\n");
+  output = "";
+  await runHook({}, "hard", stream);
+  assert.equal(output, "{}\n");
+  output = "";
+  await runHook(JSON.stringify({}), "invalid", stream);
+  response = JSON.parse(output);
+  assert.equal(response.decision, undefined);
+  assert.match(response.systemMessage, /invalid_mode/);
+});
+
+test("Codex hook runner reads stdin streams before evaluating events", async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), "ban-code-comments-hook-"));
+  const eventText = JSON.stringify(event(cwd, "write_file", { path: "main.go", content: "package main\n// finding\n" }));
+  let output = "";
+  await runHook(Readable.from([eventText]), "hard", { write: (value) => { output += value; } });
+  const response = JSON.parse(output);
+  assert.equal(response.decision, "block");
+  assert.match(response.reason, /main\.go:2:1/);
 });
 
 test("hook reconstruction and path helpers reject malformed or unsafe proposals", () => {

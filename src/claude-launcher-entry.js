@@ -10,10 +10,6 @@ async function main(modeOverride) {
   const modeArgumentIndex = process.argv.indexOf("--mode");
   const requestedMode = modeArgumentIndex >= 0 ? process.argv[modeArgumentIndex + 1] : process.argv[2];
   const mode = modeOverride || requestedMode || "hard";
-  if (mode !== "hard" && mode !== "warn") {
-    process.stdout.write(JSON.stringify({ hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: `ban-code-comments Claude hook launcher failed: unsupported hook mode ${mode}` } }) + "\n");
-    return 0;
-  }
   return runClaudeHook(await inputText(), mode);
 }
 

@@ -8,8 +8,7 @@ const selected = new Set([CATEGORIES.ORDINARY, CATEGORIES.DOCUMENTATION]);
 
 function operationalResponse(mode, code, message) {
   const reason = `ban-code-comments Claude hook operational error (${code}): ${message}`;
-  if (mode === "hard") return { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason } };
-  return { systemMessage: reason };
+  return { systemMessage: reason, hookSpecificOutput: { hookEventName: "PreToolUse", additionalContext: reason } };
 }
 
 function targetPath(root, filePath) {
@@ -104,13 +103,10 @@ export async function evaluateClaudeHook(event, mode = "hard") {
 
 export async function runClaudeHook(input, mode = "hard", output = process.stdout) {
   let event;
-  try {
-    event = JSON.parse(input);
-  } catch (error) {
-    output.write(`${JSON.stringify(operationalResponse(mode, "invalid_event", `could not decode hook event: ${error.message}`))}\n`);
-    return 0;
-  }
-  output.write(`${JSON.stringify(await evaluateClaudeHook(event, mode))}\n`);
+  try { event = typeof input === "string" ? JSON.parse(input) : input; }
+  catch (error) { output.write(`${JSON.stringify(operationalResponse(mode, "invalid_event", `could not decode hook event: ${error.message}`))}\n`); return 0; }
+  try { output.write(`${JSON.stringify(await evaluateClaudeHook(event, mode))}\n`); }
+  catch (error) { output.write(`${JSON.stringify(operationalResponse(mode, "hook_failure", error.message))}\n`); }
   return 0;
 }
 
