@@ -7,7 +7,7 @@
 Install the published package with Node.js 24 or newer:
 
 ```sh
-npm install --global ban-code-comments
+npm install --global @justindfuller/ban-code-comments
 ```
 
 The package includes the `ban-code-comments` executable and the programmatic API. It does not require Go, a native executable, or a runtime download.
@@ -85,7 +85,7 @@ For direct automation outside GitHub Actions, install the npm package and run `b
 The package also exposes plain-data operations:
 
 ```js
-import { check, scanSource } from "ban-code-comments";
+import { check, scanSource } from "@justindfuller/ban-code-comments";
 
 const sourceFindings = scanSource("const value = 1; // finding\n", "fixture.js", "javascript");
 const repositoryResult = await check(["."], { categories: new Set(["ordinary", "documentation"]) });

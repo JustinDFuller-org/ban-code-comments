@@ -1,5 +1,5 @@
 {
-  "name": "ban-code-comments",
+  "name": "@justindfuller/ban-code-comments",
   "version": "1.0.2",
   "type": "module",
   "description": "Detect and ban code comments across source and configuration files",

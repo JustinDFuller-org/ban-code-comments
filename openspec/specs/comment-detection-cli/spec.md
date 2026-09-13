@@ -8,7 +8,7 @@ Provide a publishable Node.js command-line package and programmatic API that det
 
 ### Requirement: Provide a Node.js CLI and programmatic API
 
-The package SHALL target Node.js 24 or newer, publish under the `ban-code-comments` npm package name, and provide a `ban-code-comments` executable. It SHALL expose programmatic operations for source scanning, repository discovery, complete checks, result reporting, and Codex hook evaluation. The CLI and programmatic operations SHALL use the same behavior and result model.
+The package SHALL target Node.js 24 or newer, publish under the `@justindfuller/ban-code-comments` npm package name, and provide a `ban-code-comments` executable. It SHALL expose programmatic operations for source scanning, repository discovery, complete checks, result reporting, and Codex hook evaluation. The CLI and programmatic operations SHALL use the same behavior and result model.
 
 #### Scenario: Installed package exposes the CLI
 
