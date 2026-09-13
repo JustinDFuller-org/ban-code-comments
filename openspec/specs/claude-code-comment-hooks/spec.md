@@ -5,6 +5,17 @@ Provide installable Claude Code plugins that enforce the repository's no-code-co
 
 ## Requirements
 
+### Requirement: Claude hook operational failures fail open
+The Claude Code plugins SHALL allow the tool call when hook input cannot be decoded or a proposed edit cannot be evaluated, while returning a visible non-blocking diagnostic that identifies the operational error.
+
+#### Scenario: Unevaluable event does not block
+- **WHEN** a Claude plugin cannot decode or evaluate a hook event or proposed edit
+- **THEN** it emits a diagnostic without a deny decision and the underlying tool call proceeds
+
+#### Scenario: Findings remain enforceable
+- **WHEN** a supported edit is successfully evaluated and introduces a policy finding
+- **THEN** hard mode denies it and warn mode retains its existing warning behavior
+
 ### Requirement: Enforce the comment policy before supported Claude edits
 
 The plugins SHALL inspect Claude Code `PreToolUse` events for the `Edit` and `Write` tools. They SHALL reconstruct the proposed file content, evaluate it with the shared JavaScript language registry, scanner, and default comment categories, and compare proposed findings with findings already present in the file. A hard-block plugin SHALL deny a proposed edit that introduces a finding before mutation. A warn plugin SHALL allow the edit and provide concise model-visible guidance.
