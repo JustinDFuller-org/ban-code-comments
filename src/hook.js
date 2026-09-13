@@ -33,7 +33,7 @@ function parsePatch(patch) {
     const line = lines[index];
     if (!line || line.trim() === "*** End Patch") { index += 1; continue; }
     if (line.startsWith("*** Add File: ")) {
-      const body = collectBody(lines, index + 1); changes.push({ path: line.slice(14), source: body.lines.filter((item) => item.startsWith("+")).map((item) => item.slice(1)).join("\n") }); index = body.next; continue;
+      const body = collectBody(lines, index + 1); if (body.lines.some((item) => item && !item.startsWith("+"))) throw new Error(`unsupported add-file line ${JSON.stringify(body.lines.find((item) => item && !item.startsWith("+")))}`); changes.push({ path: line.slice(14), source: body.lines.filter((item) => item.startsWith("+")).map((item) => item.slice(1)).join("\n") }); index = body.next; continue;
     }
     if (line.startsWith("*** Delete File: ")) { changes.push({ path: line.slice(17), delete: true }); index += 1; continue; }
     if (line.startsWith("*** Update File: ")) {

@@ -33,6 +33,12 @@ function assertFindingResponse(kind, mode, response) {
   assert.match(mode === "hard" ? response.hookSpecificOutput.permissionDecisionReason : response.hookSpecificOutput.additionalContext, /finding/);
 }
 
+function assertOperationalResponse(kind, response) {
+  if (kind === "codex") assert.equal(response.decision, undefined);
+  else assert.equal(response.hookSpecificOutput?.permissionDecision, undefined);
+  assert.match(response.systemMessage || response.hookSpecificOutput?.additionalContext, /proposal_unreadable/);
+}
+
 test("source and bundled launchers decode stdin and preserve enforcement modes", async () => {
   const cwd = await mkdtemp(path.join(os.tmpdir(), "ban-code-comments-launcher-"));
   await writeFile(path.join(cwd, "main.go"), "package main\n");
@@ -43,6 +49,12 @@ test("source and bundled launchers decode stdin and preserve enforcement modes",
     assertFindingResponse(kind, mode, runLauncher(relativePath, mode, event));
     const cleanEvent = kind === "codex" ? clean : { ...event, tool_input: { file_path: path.join(cwd, "main.go"), content: "package main\n" } };
     assert.deepEqual(runLauncher(relativePath, mode, cleanEvent), {});
+  }
+  for (const [, relativePath, kind, mode] of launchers) {
+    const malformed = kind === "codex"
+      ? { cwd, hook_event_name: "PreToolUse", tool_name: "write_file", tool_input: { patch: "*** Begin Patch\n*** Add File: main.go\n-invalid\n*** End Patch\n" } }
+      : { cwd, hook_event_name: "PreToolUse", tool_name: "Edit", tool_input: { file_path: path.join(cwd, "main.go"), old_string: "missing", new_string: "new" } };
+    assertOperationalResponse(kind, runLauncher(relativePath, mode, malformed));
   }
 });
 
