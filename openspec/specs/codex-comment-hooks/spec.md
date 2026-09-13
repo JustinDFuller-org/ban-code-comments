@@ -6,6 +6,17 @@ Provide installable Codex plugins that catch newly introduced code comments befo
 
 ## Requirements
 
+### Requirement: Codex hook operational failures fail open
+The Codex plugins SHALL allow the tool call when hook input cannot be decoded or a proposed edit cannot be evaluated, while returning a visible non-blocking diagnostic that identifies the operational error.
+
+#### Scenario: Normal stdin event is decoded
+- **WHEN** a Codex plugin receives a valid JSON `PreToolUse` event on stdin
+- **THEN** it evaluates the event rather than treating the stdin stream as the event value
+
+#### Scenario: Unevaluable event does not block
+- **WHEN** a Codex plugin cannot decode or evaluate a hook event or proposed edit
+- **THEN** it emits a diagnostic without a hard-block decision and the underlying tool call proceeds
+
 ### Requirement: Enforce the comment policy before supported proposed edits
 
 The plugins SHALL inspect reconstructible Codex `PreToolUse` file-edit events from the traditional file-write tools `apply_patch`, `edit`, `write`, `write_file`, and `file_write`. They SHALL evaluate the proposed result with the shared JavaScript `ban-code-comments` language registry, scanner, and default comment categories. A hard-block plugin SHALL deny a proposed edit that introduces a finding before the tool mutates the file, while a warn plugin SHALL allow the edit and return concise model-visible guidance. Findings already present and unchanged in the target file SHALL not cause an unrelated edit to be denied.
