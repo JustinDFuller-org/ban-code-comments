@@ -78,7 +78,7 @@ console.log(JSON.stringify({
   status: failed.length === 0 ? "passed" : "failed",
   release: { tag: `v${CLI_VERSION}`, cliVersion: CLI_VERSION, installation: "marketplace-plugin-launcher" },
   plugins: ["ban-code-comments-hard-block", "ban-code-comments-warn"].map((name) => ({ name, version: CLI_VERSION })),
-  cache: "launcher-managed checksum-verified cache",
+  launcher: "self-contained bundled JavaScript",
   observations,
   hostedOrCrossPlatform: "not exercised by this local harness",
 }));

@@ -27,15 +27,13 @@
     "build": "ncc build src/index.js --minify --source-map --license licenses.txt -o dist",
     "build:plugins": "node scripts/build-plugins.mjs",
     "smoke:codex": "node scripts/codex-smoke.mjs",
-    "differential": "node scripts/differential.mjs",
     "validate:plugins": "node scripts/validate-plugins.mjs",
     "test": "node --test test/*.test.js",
     "coverage": "c8 --all --include=src/**/*.js --exclude=src/../dist/** --reporter=text --reporter=cobertura --check-coverage --lines=90 node --test test/*.test.js",
     "check": "npm test && npm run validate:plugins && npm run build && git diff --exit-code -- dist licenses.txt"
   },
   "dependencies": {
-    "@actions/core": "3.0.1",
-    "@actions/tool-cache": "4.0.0"
+    "@actions/core": "3.0.1"
   },
   "devDependencies": {
     "@vercel/ncc": "0.45.0",

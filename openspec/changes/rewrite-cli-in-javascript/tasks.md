@@ -27,11 +27,11 @@
 
 - [x] 5.1 Replace Go setup, Go tests, Go coverage conversion, Go vet, and GoReleaser checks with Node installation, package tests, JS coverage, package validation, Action bundle checks, and plugin checks, and verify CI reports the required aggregate coverage threshold.
 - [x] 5.2 Replace the binary release workflow with tagged npm publication and package/version verification while retaining repository tag and Action release-reference handling, and verify a dry-run release validates metadata, bin execution, and bundled versions.
-- [ ] 5.3 Update the README and package documentation for npm installation, direct CLI usage, programmatic API usage, Action integration, Codex plugins, supported Node runtime, options, reports, statuses, and offline/self-contained behavior, and verify every documented command matches the test suite.
-- [ ] 5.4 Update Action and cross-platform smoke workflows to exercise the bundled JavaScript implementation on Ubuntu, macOS, and Windows without downloading a native CLI, and verify clean, finding, operational, and debug cases.
+- [x] 5.3 Update the README and package documentation for npm installation, direct CLI usage, programmatic API usage, Action integration, Codex plugins, supported Node runtime, options, reports, statuses, and offline/self-contained behavior, and verify every documented command matches the test suite.
+- [x] 5.4 Update Action and cross-platform smoke workflows to exercise the bundled JavaScript implementation on Ubuntu, macOS, and Windows without downloading a native CLI, and verify clean, finding, operational, and debug cases.
 
 ## 6. Remove Go and finalize
 
-- [ ] 6.1 Delete the Go implementation, Go tests, Go module files, Go fixtures' old locations, GoReleaser configuration, binary-release references, and obsolete downloader/checksum/platform-cache modules, and verify targeted searches find no remaining Go implementation or archive dependency.
-- [ ] 6.2 Delete the temporary differential harness after the final parity run and preserve the migrated JS fixtures and semantic regression tests, and verify the final test suite no longer requires Go.
+- [x] 6.1 Delete the Go implementation, Go tests, Go module files, Go fixtures' old locations, GoReleaser configuration, binary-release references, and obsolete downloader/checksum/platform-cache modules, and verify targeted searches find no remaining Go implementation or archive dependency.
+- [x] 6.2 Delete the temporary differential harness after the final parity run and preserve the migrated JS fixtures and semantic regression tests, and verify the final test suite no longer requires Go.
 - [ ] 6.3 Run the complete Node test, coverage, package, bundle, plugin, smoke, documentation, and strict OpenSpec validation checks, and verify the worktree contains only the approved JavaScript rewrite and planning artifacts.
