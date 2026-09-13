@@ -10,6 +10,8 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 for (const [entry, destination] of [
   ["src/launcher-entry.js", "plugins/ban-code-comments-hard-block/bin/launcher.js"],
   ["src/launcher-entry.js", "plugins/ban-code-comments-warn/bin/launcher.js"],
+  ["src/claude-launcher-entry.js", "plugins/ban-code-comments-claude-hard-block/bin/launcher.js"],
+  ["src/claude-launcher-entry.js", "plugins/ban-code-comments-claude-warn/bin/launcher.js"],
 ]) {
   const output = path.join(root, destination);
   await fs.mkdir(path.dirname(output), { recursive: true });
