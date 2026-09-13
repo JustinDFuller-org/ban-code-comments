@@ -14,7 +14,7 @@ The Action SHALL run the JavaScript `ban-code-comments` implementation bundled w
 - **WHEN** the Action runs on an operating-system or architecture unsupported by Node.js 24 or the package
 - **THEN** the Action reports an actionable operational error and exits unsuccessfully without attempting a scan
 
-#### Scenario: Download integrity fails
+#### Scenario: Bundled distribution integrity fails
 
 - **WHEN** the bundled JavaScript Action distribution is incomplete or fails package integrity validation
 - **THEN** the Action rejects the distribution, reports an operational error, and does not execute a scan

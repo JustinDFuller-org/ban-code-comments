@@ -8,7 +8,7 @@ Provide installable Codex plugins that catch newly introduced code comments befo
 
 ### Requirement: Enforce the comment policy before supported proposed edits
 
-The plugins SHALL inspect reconstructible Codex `PreToolUse` file-edit events from the traditional file-write tools `apply_patch`, `edit`, `write`, `write_file`, and `file_write`. They SHALL evaluate the proposed result with the existing `ban-code-comments` language registry, scanner, and default comment categories. A hard-block plugin SHALL deny a proposed edit that introduces a finding before the tool mutates the file, while a warn plugin SHALL allow the edit and return concise model-visible guidance. Findings already present and unchanged in the target file SHALL not cause an unrelated edit to be denied.
+The plugins SHALL inspect reconstructible Codex `PreToolUse` file-edit events from the traditional file-write tools `apply_patch`, `edit`, `write`, `write_file`, and `file_write`. They SHALL evaluate the proposed result with the shared JavaScript `ban-code-comments` language registry, scanner, and default comment categories. A hard-block plugin SHALL deny a proposed edit that introduces a finding before the tool mutates the file, while a warn plugin SHALL allow the edit and return concise model-visible guidance. Findings already present and unchanged in the target file SHALL not cause an unrelated edit to be denied.
 
 #### Scenario: Hard mode denies a newly introduced supported comment
 
@@ -51,22 +51,22 @@ The plugins SHALL not deny or warn on writes to Markdown, README files, unsuppor
 
 ### Requirement: Provide distinct installable plugin variants
 
-The project SHALL provide separately installable hard-block and warn-mode Codex plugins. Each plugin SHALL include valid Codex metadata, a `PreToolUse` hook configuration limited to the five traditional file-write tools, the `no-code-comments` guidance skill, and a launcher that obtains the exact CLI release coupled to the plugin. The launcher SHALL verify the published checksum before caching or executing the CLI.
+The project SHALL provide separately installable hard-block and warn-mode Codex plugins. Each plugin SHALL include valid Codex metadata, a `PreToolUse` hook configuration limited to the five traditional file-write tools, the `no-code-comments` guidance skill, and a self-contained launcher bundled from the shared JavaScript package. The launcher SHALL not download or execute a separate Go binary at runtime.
 
 #### Scenario: User installs the hard-block variant
 
 - **WHEN** a user installs and trusts the hard-block plugin
-- **THEN** Codex loads its traditional-file-write pre-tool denial behavior
+- **THEN** Codex loads its traditional-file-write pre-tool denial behavior without a runtime CLI download
 
 #### Scenario: User installs the warn variant
 
 - **WHEN** a user installs and trusts the warn plugin
 - **THEN** Codex loads the same traditional-file-write policy coverage with warning behavior and no pre-tool denial
 
-#### Scenario: CLI bootstrap integrity fails
+#### Scenario: Bundled launcher is available offline
 
-- **WHEN** the launcher downloads an archive that does not match the published checksum
-- **THEN** it refuses to execute the CLI and reports an actionable hook failure
+- **WHEN** a plugin receives a supported hook event without network access
+- **THEN** it evaluates the event using its bundled JavaScript implementation
 
 ### Requirement: Explain compliant alternatives through a skill
 
