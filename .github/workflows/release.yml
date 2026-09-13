@@ -99,4 +99,4 @@ jobs:
           cd release-artifact
           sha256sum -c SHA256SUMS
       - name: Stage package for npm approval
-        run: npm stage publish "$(find release-artifact -name '*.tgz' -type f -print -quit)" --access public
+        run: npm stage publish "./$(find release-artifact -name '*.tgz' -type f -print -quit)" --access public
