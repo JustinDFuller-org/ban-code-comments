@@ -1,6 +1,6 @@
 {
   "name": "ban-code-comments-hard-block",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Block newly introduced code comments at the Codex tool boundary.",
   "author": {
     "name": "Justin Fuller",
