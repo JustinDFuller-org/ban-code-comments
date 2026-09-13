@@ -22,7 +22,7 @@ The existing `release.yml` is manually dispatched and places validation and dire
 
 - **Use a protected tag-push trigger.** Configure the workflow for semantic-version tag pushes and remove manual dispatch. The tag remains the sole release-version source, while strict validation rejects malformed or stale refs that reach the workflow filter.
 
-- **Split validation from staging.** An unprotected validation job checks out the tag, verifies the tag commit and package version, installs dependencies, runs tests and coverage, validates plugins, rebuilds generated files, and creates the package tarball. It receives no OIDC permission and does not reference the npm environment.
+- **Split validation from staging.** An unprotected validation job checks out the tag without persisting GitHub credentials, verifies the tag commit and package version, installs dependencies, runs tests and coverage, validates plugins, rebuilds generated files, and creates the package tarball. It receives no OIDC permission and does not reference the npm environment.
 
 - **Pass an immutable tarball between jobs.** The validation job records a checksum and uploads the exact `npm pack` output. The approved staging job downloads and verifies that artifact rather than rebuilding after approval. This prevents a validated package and staged package from diverging.
 

@@ -1,7 +1,9 @@
 name: Release
 
 on:
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'
 
 permissions:
   contents: read
@@ -11,17 +13,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  validate:
     runs-on: ubuntu-latest
-    environment: npm-publish
     permissions:
       contents: read
-      id-token: write
     steps:
       - name: Checkout protected release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
@@ -57,5 +58,44 @@ jobs:
           test "$(node bin/ban-code-comments.js --version)" = "${RELEASE_TAG#v}"
         env:
           RELEASE_TAG: ${{ github.ref_name }}
-      - name: Publish package
-        run: npm publish --access public
+      - name: Pack validated package
+        run: |
+          mkdir -p release-artifact
+          npm pack --pack-destination release-artifact
+          sha256sum release-artifact/*.tgz > release-artifact/SHA256SUMS
+      - name: Upload validated package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: release-package
+          path: release-artifact
+          if-no-files-found: error
+
+  stage:
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download validated package
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: release-package
+          path: release-artifact
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24.x
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+      - name: Install staged publishing CLI
+        run: |
+          npm install --global npm@11.15.0
+          test "$(npm --version)" = "11.15.0"
+      - name: Verify package artifact
+        run: |
+          cd release-artifact
+          sha256sum -c SHA256SUMS
+      - name: Stage package for npm approval
+        run: npm stage publish "$(find release-artifact -name '*.tgz' -type f -print -quit)" --access public
