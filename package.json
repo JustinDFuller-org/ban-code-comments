@@ -1,12 +1,18 @@
 {
   "name": "@justindfuller/ban-code-comments",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "description": "Detect and ban code comments across source and configuration files",
   "engines": {
     "node": ">=24"
   },
-  "bin": "./bin/ban-code-comments.js",
+  "bin": {
+    "ban-code-comments": "./bin/ban-code-comments.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JustinDFuller-org/ban-code-comments"
+  },
   "exports": {
     ".": "./src/api.js",
     "./model": "./src/model.js",
@@ -24,6 +30,7 @@
   "scripts": {
     "build": "ncc build src/index.js --minify --source-map --license licenses.txt -o dist",
     "build:plugins": "node scripts/build-plugins.mjs",
+    "version": "node scripts/sync-version.mjs && npm run build && npm run build:plugins",
     "smoke:codex": "node scripts/codex-smoke.mjs",
     "validate:plugins": "node scripts/validate-plugins.mjs",
     "test": "node --test test/*.test.js",
