@@ -141,7 +141,7 @@ npm run build:plugins
 
 ## Coverage policy
 
-CI runs the Node test suite, enforces at least 90 percent aggregate JavaScript line coverage, validates both Codex plugins, rebuilds generated distributions, runs the package CLI, and validates OpenSpec.
+CI runs the Node test suite, enforces at least 90 percent aggregate JavaScript line coverage, validates both Codex and Claude Code plugin variants, rebuilds generated distributions, runs the package CLI, and validates OpenSpec.
 
 ## Releases
 
