@@ -1,8 +1,8 @@
 ## 1. Claude hook evaluation
 
-- [ ] 1.1 Add a Claude-specific hook adapter that accepts only `PreToolUse` `Edit` and `Write` events and verify unsupported event and tool inputs return no policy response.
-- [ ] 1.2 Reconstruct `Write` full-content proposals and `Edit` first/all replacement proposals, including absolute paths and `replace_all`, and verify malformed, missing-file, and replacement-error cases are handled by mode.
-- [ ] 1.3 Reuse differential scanner evaluation and Claude-native response formatting for hard denial, warn guidance, unchanged findings, literals, Markdown, unsupported files, and clean edits; verify the focused Claude hook tests pass.
+- [x] 1.1 Add a Claude-specific hook adapter that accepts only `PreToolUse` `Edit` and `Write` events and verify unsupported event and tool inputs return no policy response.
+- [x] 1.2 Reconstruct `Write` full-content proposals and `Edit` first/all replacement proposals, including absolute paths and `replace_all`, and verify malformed, missing-file, and replacement-error cases are handled by mode.
+- [x] 1.3 Reuse differential scanner evaluation and Claude-native response formatting for hard denial, warn guidance, unchanged findings, literals, Markdown, unsupported files, and clean edits; verify the focused Claude hook tests pass.
 
 ## 2. Claude plugin packaging
 
