@@ -52,9 +52,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
       - name: Publish package
-        run: npm publish --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
       - name: Update major Action tag
         env:
           RELEASE_TAG: ${{ github.ref_name }}
