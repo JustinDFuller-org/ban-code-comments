@@ -1,6 +1,6 @@
 {
   "name": "ban-code-comments-warn",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Warn about newly introduced code comments at the Codex tool boundary.",
   "author": {
     "name": "Justin Fuller",
