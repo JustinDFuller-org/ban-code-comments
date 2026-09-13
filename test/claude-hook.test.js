@@ -17,6 +17,15 @@ test("Claude hard mode denies Write and Edit findings with native nested output"
   assert.equal(edit.hookSpecificOutput.permissionDecision, "deny");
 });
 
+test("Claude accepts absolute paths outside cwd", async () => {
+  const cwd = await mkdtemp(path.join(os.tmpdir(), "ban-code-comments-claude-cwd-"));
+  const outside = await mkdtemp(path.join(os.tmpdir(), "ban-code-comments-claude-target-"));
+  const filePath = path.join(outside, "main.go");
+  const response = await evaluateClaudeHook(event(cwd, "Write", { file_path: filePath, content: "package main\n// finding\n" }));
+  assert.equal(response.hookSpecificOutput.permissionDecision, "deny");
+  assert.match(response.hookSpecificOutput.permissionDecisionReason, /main\.go:2:1/);
+});
+
 test("Claude Edit honors first and all replacement semantics", async () => {
   const cwd = await mkdtemp(path.join(os.tmpdir(), "ban-code-comments-claude-"));
   const filePath = path.join(cwd, "main.go");
@@ -46,7 +55,7 @@ test("Claude unsupported events, literals, Markdown, and unsupported files are n
     { tool_name: "Write", tool_input: { file_path: path.join(cwd, "main.go"), content: "package main\nvar text = \"// literal\"\n" } },
     { tool_name: "Write", tool_input: { file_path: path.join(cwd, "README.md"), content: "# docs\n<!-- allowed -->\n" } },
     { tool_name: "Write", tool_input: { file_path: path.join(cwd, "data.bin"), content: "// unsupported\n" } },
-  ]) assert.deepEqual(await evaluateClaudeHook({ ...event(cwd, item.tool_name, item.tool_input), hook_event_name: item.tool_name === "Bash" ? "PreToolUse" : "PostToolUse" }), {});
+  ]) assert.deepEqual(await evaluateClaudeHook(event(cwd, item.tool_name, item.tool_input)), {});
 });
 
 test("Claude malformed proposals return mode-specific operational responses", async () => {

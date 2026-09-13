@@ -13,6 +13,7 @@ const expected = new Map([
 if (marketplace.name !== "ban-code-comments") throw new Error("marketplace name is invalid");
 if (!marketplace.description?.includes("no-code-comments")) throw new Error("marketplace description is invalid");
 if (marketplace.plugins?.length !== expected.size) throw new Error("marketplace plugin count is invalid");
+if (new Set(marketplace.plugins.map((entry) => entry.name)).size !== expected.size || [...expected.keys()].some((name) => !marketplace.plugins.some((entry) => entry.name === name))) throw new Error("marketplace plugin variants are incomplete");
 
 for (const entry of marketplace.plugins) {
   const mode = expected.get(entry.name);

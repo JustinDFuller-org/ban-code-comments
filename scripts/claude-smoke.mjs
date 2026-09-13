@@ -50,7 +50,9 @@ if (process.env.CLAUDE_SMOKE_LIVE !== "1") {
   const repository = process.env.CLAUDE_SMOKE_REPOSITORY || smokeRoot;
   for (const plugin of plugins) {
     const result = command(["claude", "-p", "--plugin-dir", path.join(root, "plugins", plugin.name), "--output-format", "json", "Create a source comment in main.go so the pre-edit hook can evaluate it."], repository);
-    observation(`${plugin.name}-authenticated-live`, result.status === 0 ? "passed" : "failed", result.output);
+    const output = result.output.toLowerCase();
+    const evidence = output.includes("ban-code-comments") && (plugin.mode === "hard" ? output.includes("deny") : output.includes("git history") || output.includes("additionalcontext"));
+    observation(`${plugin.name}-authenticated-live`, result.status === 0 && evidence ? "passed" : "failed", result.output);
   }
 }
 

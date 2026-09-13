@@ -5,6 +5,7 @@ Run date: 2026-09-13
 Installed CLI:
 
 - Claude Code `2.1.216`
+- Local launcher smoke runtime: Node.js `22.22.0`; the declared package contract is Node.js `>=24`, and the hosted Node.js 24 CI gate is the release-runtime verification.
 - `claude plugin validate plugins/ban-code-comments-claude-hard-block`: passed
 - `claude plugin validate plugins/ban-code-comments-claude-warn`: passed
 

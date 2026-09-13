@@ -15,13 +15,16 @@ function operationalResponse(mode, code, message) {
 function targetPath(root, filePath) {
   if (typeof filePath !== "string" || !filePath.trim()) throw new Error("tool input does not identify a file");
   const target = path.isAbsolute(filePath) ? path.normalize(filePath) : path.resolve(root, filePath);
+  if (path.isAbsolute(filePath)) return target;
   const relative = path.relative(root, target);
   if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) throw new Error(`proposed path escapes workspace: ${JSON.stringify(filePath)}`);
   return target;
 }
 
 function displayPath(root, filePath) {
-  return path.relative(root, targetPath(root, filePath)).replaceAll(path.sep, "/");
+  const target = targetPath(root, filePath);
+  const relative = path.relative(root, target);
+  return relative && relative !== ".." && !relative.startsWith(`..${path.sep}`) ? relative.replaceAll(path.sep, "/") : target.replaceAll(path.sep, "/");
 }
 
 function replacement(source, oldText, newText, replaceAll) {
