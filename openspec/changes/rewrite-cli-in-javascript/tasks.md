@@ -14,8 +14,8 @@
 ## 3. Codex hook core and differential parity
 
 - [x] 3.1 Port hook event decoding, supported tool filtering, path safety, content/edit/patch reconstruction, legacy-finding subtraction, hard-block responses, warn responses, and operational errors, and verify all existing hook fixtures and protocol cases.
-- [ ] 3.2 Add the temporary Go-versus-JavaScript differential harness with deterministic temporary repositories and semantic normalization for JSON, text findings, diagnostics, and hook responses, and verify it compares exit statuses and outputs for identical inputs.
-- [ ] 3.3 Run the differential matrix across every fixture class, language, category/filter combination, discovery edge case, invalid invocation, and supported hook tool/mode, and verify that no semantic or status mismatches remain before removing Go.
+- [x] 3.2 Add the temporary Go-versus-JavaScript differential harness with deterministic temporary repositories and semantic normalization for JSON, text findings, diagnostics, and hook responses, and verify it compares exit statuses and outputs for identical inputs.
+- [x] 3.3 Run the differential matrix across every fixture class, language, category/filter combination, discovery edge case, invalid invocation, and supported hook tool/mode, and verify that no semantic or status mismatches remain before removing Go.
 
 ## 4. Integration replacement
 

@@ -27,6 +27,7 @@
     "build": "ncc build src/index.js --minify --source-map --license licenses.txt -o dist",
     "build:plugins": "node scripts/build-plugins.mjs",
     "smoke:codex": "node scripts/codex-smoke.mjs",
+    "differential": "node scripts/differential.mjs",
     "validate:plugins": "node scripts/validate-plugins.mjs",
     "test": "node --test test/*.test.js",
     "coverage": "c8 --all --include=src/**/*.js --exclude=src/../dist/** --reporter=text --reporter=cobertura node --test test/*.test.js",
