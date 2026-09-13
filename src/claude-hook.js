@@ -101,9 +101,21 @@ export async function evaluateClaudeHook(event, mode = "hard") {
   }
 }
 
+async function decodeInput(input) {
+  if (typeof input === "string") return JSON.parse(input);
+  if (Buffer.isBuffer(input)) return JSON.parse(input.toString("utf8"));
+  if (input && typeof input === "object" && typeof input[Symbol.asyncIterator] === "function") {
+    const chunks = [];
+    for await (const chunk of input) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  }
+  if (input && typeof input === "object" && !Array.isArray(input)) return input;
+  throw new Error("hook input is neither JSON text nor an event object");
+}
+
 export async function runClaudeHook(input, mode = "hard", output = process.stdout) {
   let event;
-  try { event = typeof input === "string" ? JSON.parse(input) : input; }
+  try { event = await decodeInput(input); }
   catch (error) { output.write(`${JSON.stringify(operationalResponse(mode, "invalid_event", `could not decode hook event: ${error.message}`))}\n`); return 0; }
   try { output.write(`${JSON.stringify(await evaluateClaudeHook(event, mode))}\n`); }
   catch (error) { output.write(`${JSON.stringify(operationalResponse(mode, "hook_failure", error.message))}\n`); }
