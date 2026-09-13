@@ -127,4 +127,4 @@ npm run build:plugins
 
 CI runs the Node test suite, enforces at least 90 percent aggregate JavaScript line coverage, validates both Codex plugins, rebuilds generated distributions, runs the package CLI, and validates OpenSpec.
 
-Semantic-version tags matching `vMAJOR.MINOR.PATCH` publish the corresponding npm package version. The repository tag and Action major tag remain release references; the Action and plugins use the bundled JavaScript implementation coupled to that release.
+An administrator dispatches the `Release` workflow from `main` with a `vMAJOR.MINOR.PATCH` tag value to publish the corresponding npm package version. After publication succeeds, the administrator creates the protected version tag and advances the protected Action major tag. The Action and plugins use the bundled JavaScript implementation coupled to that release.

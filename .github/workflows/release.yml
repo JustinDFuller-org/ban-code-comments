@@ -1,9 +1,12 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Semantic version tag to publish
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -14,14 +17,14 @@ concurrency:
 
 jobs:
   publish:
-    if: contains(github.ref_name, '.')
+    if: github.actor == 'JustinDFuller'
     runs-on: ubuntu-latest
     environment: npm-publish
     permissions:
       contents: read
       id-token: write
     steps:
-      - name: Checkout tagged source
+      - name: Checkout selected source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
@@ -33,7 +36,7 @@ jobs:
           package-manager-cache: false
       - name: Validate semantic version tag
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
             echo "unsupported release tag: $RELEASE_TAG" >&2
@@ -42,6 +45,7 @@ jobs:
       - name: Validate release commit
         run: |
           git fetch origin main --quiet
+          test "$GITHUB_REF" = "refs/heads/main"
           test "$GITHUB_SHA" = "$(git rev-parse origin/main)"
       - name: Install package dependencies
         run: npm ci
@@ -57,6 +61,6 @@ jobs:
           npm pack --dry-run
           test "$(node bin/ban-code-comments.js --version)" = "${RELEASE_TAG#v}"
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
       - name: Publish package
         run: npm publish --access public
