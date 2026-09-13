@@ -12,3 +12,5 @@
 - The active `Releases` tag ruleset targets all tags and includes creation, update, deletion, and non-fast-forward protections.
 - `.github/workflows/release.yml` supplies `id-token: write`, uses the `npm-publish` environment, invokes `npm publish --access public`, and contains no long-lived npm token or repository write permission.
 - Public npm metadata for `@justindfuller/ban-code-comments@1.0.2` confirms the published package and registry integrity signature. npm does not expose the account-level trusted-publisher registration through public package metadata, so that registration remains an external configuration prerequisite rather than independently observable evidence.
+- Historical release run `34757757995` used the removed `NPM_TOKEN` path and failed with npm `EOTP` after signing provenance; this confirms that a future release must prove the configured trusted publisher instead of relying on token fallback.
+- No successful `workflow_dispatch` release from a protected semantic tag has been run; the manual OIDC publication path remains unproven until the npm publisher mapping is confirmed.
