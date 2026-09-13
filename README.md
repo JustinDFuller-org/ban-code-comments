@@ -127,4 +127,8 @@ npm run build:plugins
 
 CI runs the Node test suite, enforces at least 90 percent aggregate JavaScript line coverage, validates both Codex plugins, rebuilds generated distributions, runs the package CLI, and validates OpenSpec.
 
-Semantic-version tags matching `vMAJOR.MINOR.PATCH` publish the corresponding npm package version. The repository tag and Action major tag remain release references; the Action and plugins use the bundled JavaScript implementation coupled to that release.
+## Releases
+
+Releases are manual administrator actions. To publish a version, an administrator creates the protected `vMAJOR.MINOR.PATCH` tag on the current `main` commit, selects that tag when manually dispatching the `Release` workflow, and waits for the `npm-publish` environment approval from `JustinDFuller`. The workflow validates the tag, source commit, and package version before publishing through the repository's npm trusted publisher with GitHub Actions OIDC.
+
+After npm publication succeeds, an administrator manually advances the protected floating Action tag, such as `v1`, to the released commit. The release workflow never creates or updates floating tags. Use an exact version such as `@v1.0.0` or a full commit SHA when reproducibility is required.

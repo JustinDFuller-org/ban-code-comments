@@ -1,15 +1,15 @@
 ## 1. Release workflow
 
-- [ ] 1.1 Replace push-tag publication with manual workflow dispatch against the selected semantic-version tag and derive the release version from `github.ref_name`; verify the workflow trigger and ref expression with a YAML/structure check.
-- [ ] 1.2 Validate the protected tag format, tagged commit against `origin/main`, and package version before publication; verify invalid, stale, and mismatched refs fail before `npm publish`.
-- [ ] 1.3 Retain the `npm-publish` environment, OIDC permission, pinned actions, package validation, and trusted `npm publish` command without long-lived npm credentials; verify the workflow has `id-token: write`, no npm token secret, and the expected environment.
-- [ ] 1.4 Remove the automatic floating-major-tag update job and all workflow repository write permission; verify the workflow contains no tag-push mutation or `contents: write` permission.
+- [x] 1.1 Replace push-tag publication with manual workflow dispatch against the selected semantic-version tag and derive the release version from `github.ref_name`; verify the workflow trigger and ref expression with a YAML/structure check.
+- [x] 1.2 Validate the protected tag format, tagged commit against `origin/main`, and package version before publication; verify invalid, stale, and mismatched refs fail before `npm publish`.
+- [x] 1.3 Retain the `npm-publish` environment, OIDC permission, pinned actions, package validation, and trusted `npm publish` command without long-lived npm credentials; verify the workflow has `id-token: write`, no npm token secret, and the expected environment.
+- [x] 1.4 Remove the automatic floating-major-tag update job and all workflow repository write permission; verify the workflow contains no tag-push mutation or `contents: write` permission.
 
 ## 2. Release documentation
 
-- [ ] 2.1 Document administrator creation of the protected semantic-version tag and manual dispatch of `release.yml` using that tag; verify the README release sequence matches the workflow ref contract.
-- [ ] 2.2 Document the required `JustinDFuller` environment approval and trusted-publisher path; verify the documented account, environment, and OIDC flow match repository configuration.
-- [ ] 2.3 Document manual promotion of protected floating Action tags such as `v1` after npm publication; verify no documentation claims that the workflow moves floating tags automatically.
+- [x] 2.1 Document administrator creation of the protected semantic-version tag and manual dispatch of `release.yml` using that tag; verify the README release sequence matches the workflow ref contract.
+- [x] 2.2 Document the required `JustinDFuller` environment approval and trusted-publisher path; verify the documented account, environment, and OIDC flow match repository configuration.
+- [x] 2.3 Document manual promotion of protected floating Action tags such as `v1` after npm publication; verify no documentation claims that the workflow moves floating tags automatically.
 
 ## 3. Governance and verification
 
