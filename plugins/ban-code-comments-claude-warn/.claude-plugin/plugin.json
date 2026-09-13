@@ -1,6 +1,6 @@
 {
   "name": "ban-code-comments-claude-warn",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Warn Claude Code when edits introduce supported source comments.",
   "author": {
     "name": "Justin Fuller"
