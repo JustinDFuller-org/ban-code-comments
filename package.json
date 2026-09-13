@@ -32,6 +32,7 @@
     "build:plugins": "node scripts/build-plugins.mjs",
     "version": "node scripts/sync-version.mjs && npm run build && npm run build:plugins",
     "smoke:codex": "node scripts/codex-smoke.mjs",
+    "validate:claude-plugins": "node scripts/validate-claude-plugins.mjs",
     "validate:plugins": "node scripts/validate-plugins.mjs",
     "test": "node --test test/*.test.js",
     "coverage": "c8 --all --include=src/**/*.js --exclude=src/../dist/** --reporter=text --reporter=cobertura --check-coverage --lines=90 node --test test/*.test.js",
